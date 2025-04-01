@@ -47,7 +47,7 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
     <div className="flex flex-col items-center">
       {/* 結果表示 */}
       <motion.div
-        className="text-2xl sm:text-3xl font-bold mb-8 text-center min-h-[3em] font-heading"
+        className="text-2xl sm:text-3xl font-bold mb-8 text-center min-h-[3em] font-heading mt-3"
         initial={{ opacity: 0, y: -20 }}
         animate={{ 
           opacity: isSpinning || showResult || showInputMessage ? 1 : 0,
