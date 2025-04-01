@@ -528,9 +528,15 @@ export default function Home() {
   return (
     <main className="min-h-screen p-4 sm:p-8 bg-gradient-to-br from-light to-white dark:from-dark dark:to-gray-900">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl sm:text-5xl font-bold text-center mb-8 text-accent dark:text-accent tracking-tight">
+        <h1 className="text-4xl sm:text-5xl font-bold text-center mb-4 text-accent dark:text-accent tracking-tight">
           ルーレットアプリ
         </h1>
+        
+        <div className="text-center mb-8 text-gray-700 dark:text-gray-200 text-base sm:text-lg md:text-xl flex flex-col items-center font-medium">
+          <p className="mb-2">📋 リストに選択肢を追加</p>
+          <p className="mb-2">📊 確率スライダーで調整</p>
+          <p className="mb-2">🎯 ルーレット中央のボタンでスピン！</p>
+        </div>
         
         {/* 重みの大きい選択肢を分割して表示する */}
         <div className="gradient-border mb-10">
