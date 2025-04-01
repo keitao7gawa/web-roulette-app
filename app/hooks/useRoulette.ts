@@ -129,8 +129,8 @@ export function useRoulette({
     setHighlightedIndex(null);
     setSelectedIndex(null);
 
-    // 最低20回転、最大30回転に大幅増加
-    const spins = 20 + Math.floor(Math.random() * 11);
+    // 最低10回転、最大25回転に大幅増加
+    const spins = 10 + Math.floor(Math.random() * 16);
     const baseRotation = spins * 360;
     
     // 回転のばらつきを最大限に増加（0-1080度＝3周分）
