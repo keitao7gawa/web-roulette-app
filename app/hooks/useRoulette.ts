@@ -129,23 +129,16 @@ export function useRoulette({
     setHighlightedIndex(null);
     setSelectedIndex(null);
 
-    const targetIndex = Math.floor(Math.random() * validOptions.length);
-    const needlePosition = 90;
-    
-    let cumulativeAngle = 0;
-    for (let i = 0; i < targetIndex; i++) {
-      cumulativeAngle += segmentAngles[i];
-    }
-    
-    const segmentOffset = Math.random() * segmentAngles[targetIndex];
-    const targetRotation = (needlePosition - (cumulativeAngle + segmentOffset) + 360) % 360;
-    
-    const spins = 5 + Math.floor(Math.random() * 6);
+    // 最低20回転、最大30回転に大幅増加
+    const spins = 20 + Math.floor(Math.random() * 11);
     const baseRotation = spins * 360;
-    const extraRotation = Math.random() * 40 - 20;
+    
+    // 回転のばらつきを最大限に増加（0-1080度＝3周分）
+    const extraRotation = Math.random() * 1080;
     
     const currentRotation = prevRotationRef.current;
-    const newRotation = currentRotation + baseRotation + targetRotation + extraRotation;
+    // 前回の回転量に加算して、新しい回転角度を設定
+    const newRotation = currentRotation + baseRotation + extraRotation;
     
     setRotation(newRotation);
     prevRotationRef.current = newRotation;
