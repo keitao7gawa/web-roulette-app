@@ -431,13 +431,10 @@ export default function Home() {
     // 重みが基準値の何倍以上なら分割するか
     const splitThreshold = baseWeight * SPLIT_RATIO;
     
-    console.log(`分割情報 - 平均: ${averageWeight.toFixed(1)}%, 中央値: ${medianWeight.toFixed(1)}%, 基準値: ${baseWeight.toFixed(1)}%, 分割閾値: ${splitThreshold.toFixed(1)}%`);
-    
     // まず分割が必要な選択肢のインデックスを特定
     validOptions.forEach((option, index) => {
       if (option.weight >= splitThreshold && option.weight >= 20) { // 最低20%以上の重みがあるものだけ分割
         splitIndices.push(index);
-        console.log(`"${option.text}" (${option.weight.toFixed(1)}%) を分割します - 閾値 ${splitThreshold.toFixed(1)}% を超過`);
       }
     });
     
@@ -514,9 +511,6 @@ export default function Home() {
       processedOptions.splice(bestPosition, 0, option.text);
       processedWeights.splice(bestPosition, 0, halfWeight);
       optionIndices.splice(bestPosition, 0, originalIndex);
-      
-      // デバッグ情報
-      console.log(`分割セグメント "${option.text}" の配置: 最初=${firstSegmentIndex}, 2つ目=${bestPosition}, 距離=${maxDistance}`);
     });
     
     // 各選択肢の色を管理するための配列
@@ -599,13 +593,14 @@ export default function Home() {
                           backgroundColor: isFocused ? 'white' : '#f9fafb',
                         }}
                         className={`w-full rounded-md focus:outline-none transition-all ${
-                          isSpinning ? "notransition bg-gray-100" : ""
+                          isSpinning ? "notransition bg-gray-100 cursor-not-allowed" : ""
                         } ${
                           isFocused 
                             ? "text-base sm:text-lg font-medium shadow-sm py-2 px-3 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
                             : "text-sm py-1.5 px-2.5 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-500"
                         }`}
                         disabled={isSpinning}
+                        readOnly={isSpinning}
                       />
                     </div>
                     
@@ -646,13 +641,14 @@ export default function Home() {
                     <button
                       onClick={() => removeOption(index)}
                       className={`flex-none transition-all ${
-                        isSpinning 
+                        isSpinning || options.length <= 1
                           ? "text-gray-400 cursor-not-allowed notransition" 
                           : "text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                       } ${
                         isFocused ? "opacity-100 scale-110" : "opacity-60 scale-90"
                       }`}
-                      disabled={isSpinning}
+                      disabled={isSpinning || options.length <= 1}
+                      aria-disabled={isSpinning || options.length <= 1}
                     >
                       <TrashIcon className={`${isFocused ? "w-5 h-5 sm:w-6 sm:h-6" : "w-4 h-4"} transition-all`} />
                     </button>
@@ -671,6 +667,7 @@ export default function Home() {
                   : "text-primary hover:text-primary/80 hover:bg-primary/10"
               }`}
               disabled={isSpinning}
+              aria-disabled={isSpinning}
             >
               <PlusIcon className="w-5 h-5" />
               <span>選択肢を追加</span>
@@ -684,6 +681,7 @@ export default function Home() {
                   : "bg-secondary/20 text-secondary hover:bg-secondary/30 dark:bg-secondary/10 dark:text-secondary/90 dark:hover:bg-secondary/20"
               }`}
               disabled={isSpinning || validOptionsCount <= 1}
+              aria-disabled={isSpinning || validOptionsCount <= 1}
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
