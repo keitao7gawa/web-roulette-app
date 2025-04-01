@@ -32,12 +32,18 @@ const TEXT_RADIUS = 30;
 const BASE_SPINS = 5; // 基本の回転数
 const MIN_DURATION = 4; // 最小アニメーション時間（秒）
 const MAX_DURATION = 6; // 最大アニメーション時間（秒）
-const MAX_FONT_SIZE = 14; // 最大フォントサイズ
-const MIN_FONT_SIZE = 6; // 最小フォントサイズ
+const MAX_FONT_SIZE = 8; // 最大フォントサイズをさらに小さく（12→8）
+const MIN_FONT_SIZE = 3; // 最小フォントサイズをさらに小さく（4→3）
 
 export default function Roulette({ options, weights, isSpinning, onSpin, onSegmentColorChange, colors, onResultDetermined }: RouletteProps) {
   // 空のオプションを除外
-  const validOptions = useMemo(() => options.filter(option => option.trim() !== ''), [options]);
+  const validOptions = useMemo(() => {
+    // optionsが未定義または空の場合はデフォルト値を返す
+    if (!options || options.length === 0) {
+      return ['サンプル'];
+    }
+    return options.filter(option => option && option.trim() !== '');
+  }, [options]);
   
   // 有効な選択肢の重みを取得（指定がない場合はすべて1）
   const validWeights = useMemo(() => {
@@ -45,7 +51,7 @@ export default function Roulette({ options, weights, isSpinning, onSpin, onSegme
     // optionsとweightsの有効なものだけを抽出
     return options
       .map((option, index) => ({ option, weight: weights[index] || 1 }))
-      .filter(item => item.option.trim() !== '')
+      .filter(item => item.option && item.option.trim() !== '')
       .map(item => item.weight);
   }, [validOptions, weights, options]);
   
@@ -63,35 +69,48 @@ export default function Roulette({ options, weights, isSpinning, onSpin, onSegme
     return validOptions.map(option => {
       // テキストの長さと選択肢の数の両方を考慮したフォントサイズの計算
       const textLength = option.length;
+      const segmentAngle = segmentAngles[validOptions.indexOf(option)];
       
       // セグメント角度から基本サイズを決定（角度が小さいほど小さく）
-      const baseSegmentSize = Math.min(MAX_FONT_SIZE, MAX_FONT_SIZE * Math.min(1, 45 / segmentAngles[validOptions.indexOf(option)]));
+      // 角度が45度未満の場合は、その比率に応じて最大サイズを調整
+      const angleRatio = Math.min(1, segmentAngle / 45);
+      const baseSegmentSize = MAX_FONT_SIZE * angleRatio;
       
       // テキスト長による補正（長いほど小さく）
-      let size;
+      let sizeRatio;
       if (textLength <= 1) {
-        // 1文字の場合は最大サイズ（セグメント角度の制限内で）
-        size = baseSegmentSize;
+        // 1文字の場合
+        sizeRatio = 1.0;
       } else if (textLength <= 3) {
-        // 2-3文字は若干小さく
-        size = baseSegmentSize * 0.9;
-      } else if (textLength <= 6) {
-        // 4-6文字はさらに小さく
-        size = baseSegmentSize * 0.8;
-      } else if (textLength <= 10) {
-        // 7-10文字
-        size = baseSegmentSize * 0.7;
-      } else if (textLength <= 15) {
-        // 11-15文字
-        size = baseSegmentSize * 0.6;
+        // 2-3文字
+        sizeRatio = 0.9;
+      } else if (textLength <= 5) {
+        // 4-5文字
+        sizeRatio = 0.8;
+      } else if (textLength <= 8) {
+        // 6-8文字
+        sizeRatio = 0.7;
+      } else if (textLength <= 12) {
+        // 9-12文字
+        sizeRatio = 0.6;
+      } else if (textLength <= 16) {
+        // 13-16文字
+        sizeRatio = 0.5;
       } else {
-        // 16文字以上は最小サイズに近づく
-        size = baseSegmentSize * 0.5;
+        // 17文字以上
+        sizeRatio = 0.4;
       }
       
-      // 選択肢の数による追加補正
-      const optionCountFactor = Math.max(0.6, Math.min(1, 8 / validOptions.length));
+      let size = baseSegmentSize * sizeRatio;
+      
+      // 選択肢の数による追加補正（選択肢が多いほど小さく）
+      const optionCountFactor = Math.max(0.45, Math.min(0.9, 5 / validOptions.length));
       size *= optionCountFactor;
+      
+      // セグメントが小さすぎる場合（30度未満）は、さらに小さく調整
+      if (segmentAngle < 30) {
+        size *= Math.max(0.45, segmentAngle / 30);
+      }
       
       // 最小・最大サイズの制限
       return Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, size));
@@ -198,7 +217,7 @@ export default function Roulette({ options, weights, isSpinning, onSpin, onSegme
     onSegmentColorChange(finalIndex, selectedColor);
     
     // 結果を親コンポーネントに通知
-    if (onResultDetermined) {
+    if (onResultDetermined && finalIndex >= 0 && finalIndex < validOptions.length) {
       onResultDetermined(validOptions[finalIndex]);
     }
   };
@@ -270,7 +289,8 @@ export default function Roulette({ options, weights, isSpinning, onSpin, onSegme
   // テキストの表示形式を最適化
   const optimizeTextDisplay = (text: string, fontSize: number): string => {
     // 文字数が多すぎる場合、短縮表示
-    const maxLength = Math.floor(30 / fontSize);
+    // フォントサイズが小さいほど表示できる文字数を増やす
+    const maxLength = Math.floor(35 / (fontSize * 0.8));
     if (text.length > maxLength && maxLength > 3) {
       return text.substring(0, maxLength - 3) + '...';
     }
@@ -304,7 +324,7 @@ export default function Roulette({ options, weights, isSpinning, onSpin, onSegme
           >
             抽選中...
           </motion.div>
-        ) : showResult && selectedIndex !== null ? (
+        ) : showResult && selectedIndex !== null && selectedIndex >= 0 && selectedIndex < validOptions.length ? (
           `「${validOptions[selectedIndex]}」が選ばれました！`
         ) : null}
       </motion.div>
@@ -350,8 +370,8 @@ export default function Roulette({ options, weights, isSpinning, onSpin, onSegme
             // ハイライト時は少し大きくする
             const fontSize = isHighlighted ? baseFontSize * 1.25 : baseFontSize;
             
-            // テキスト表示の最適化
-            const displayText = optimizeTextDisplay(option, fontSize);
+            // テキスト表示の最適化（空文字列のチェックを追加）
+            const displayText = option ? optimizeTextDisplay(option, fontSize) : ''; 
             
             return (
               <g key={index}>

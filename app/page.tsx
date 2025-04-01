@@ -333,14 +333,20 @@ export default function Home() {
   };
 
   const spinRoulette = () => {
-    if (options.filter(opt => opt.text.trim() !== '').length < 2) return;
+    const validOptionsCount = options.filter(opt => opt.text.trim() !== '').length;
+    if (validOptionsCount < 2) return;
     
     setIsSpinning(true);
     setResult(null);
   };
 
   const handleResultDetermined = (result: string) => {
-    setResult(result);
+    // 「オプションを入力してください」というダミーの結果の場合は特別処理
+    if (result === 'オプションを入力してください') {
+      setResult(null);
+    } else {
+      setResult(result);
+    }
     setIsSpinning(false);
   };
 
@@ -406,6 +412,15 @@ export default function Home() {
   // 重みの大きい選択肢を表示用に分割する
   const getProcessedOptionsForRouletteDisplay = () => {
     const validOptions = options.filter(opt => opt.text.trim() !== '');
+    
+    // 有効なオプションがない場合、デフォルトのダミーオプションを返す
+    if (validOptions.length === 0) {
+      return {
+        processedOptions: ['オプションを入力してください'],
+        processedWeights: [100],
+        processedColors: [COLORS[0]]
+      };
+    }
     
     // 処理後の選択肢と重みを格納する配列
     const processedOptions: string[] = [];
