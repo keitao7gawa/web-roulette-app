@@ -192,31 +192,48 @@ export default function Home() {
     
     // 他の選択肢がある場合は調整
     if (otherValidIndices.length > 0) {
-      // 合計で100%になるように他の選択肢の重みを均等に調整
+      // 合計で100%になるように他の選択肢の重みを比率を保ちながら調整
       // まず対象の選択肢の重みを更新
       newOptions[index].weight = newWeight;
       
       // 残りの重み
       const remainingWeight = 100 - newWeight;
       
-      // 残りの重みを他の選択肢に均等に分配
+      // 残りの重みを他の選択肢に元の比率を保ちながら分配
       if (remainingWeight > 0) {
-        // 均等な重み（小数点第一位まで計算）
-        const equalShare = Math.round((remainingWeight / otherValidIndices.length) * 10) / 10;
-        // 合計を計算して余りを調整
-        const totalShares = equalShare * (otherValidIndices.length - 1);
-        // 最後の要素の値（100%になるように調整）
-        const lastShare = Math.round((remainingWeight - totalShares) * 10) / 10;
+        // 他の選択肢の現在の重みの合計
+        const otherTotalWeight = otherValidIndices.reduce((sum, i) => sum + newOptions[i].weight, 0);
         
-        // 各選択肢に重みを設定
-        otherValidIndices.forEach((i, idx) => {
-          if (idx === otherValidIndices.length - 1) {
-            // 最後の選択肢には調整値を設定
-            newOptions[i].weight = lastShare;
-          } else {
-            newOptions[i].weight = equalShare;
-          }
-        });
+        if (otherTotalWeight > 0) {
+          // 各選択肢の元の比率を計算し、残りの重みを分配
+          otherValidIndices.forEach((i, idx) => {
+            const ratio = newOptions[i].weight / otherTotalWeight;
+            if (idx === otherValidIndices.length - 1) {
+              // 最後の選択肢は丸め誤差を防ぐために、残りを全て割り当て
+              const allocatedWeight = otherValidIndices.slice(0, -1).reduce(
+                (sum, j) => sum + newOptions[j].weight, 
+                newWeight
+              );
+              newOptions[i].weight = Math.round((100 - allocatedWeight) * 10) / 10;
+            } else {
+              // 元の比率に基づいて重みを再分配（小数点第一位まで計算）
+              newOptions[i].weight = Math.round((remainingWeight * ratio) * 10) / 10;
+            }
+          });
+        } else {
+          // 他の選択肢の重みが全て0の場合は均等分配
+          const equalShare = Math.round((remainingWeight / otherValidIndices.length) * 10) / 10;
+          const totalShares = equalShare * (otherValidIndices.length - 1);
+          const lastShare = Math.round((remainingWeight - totalShares) * 10) / 10;
+          
+          otherValidIndices.forEach((i, idx) => {
+            if (idx === otherValidIndices.length - 1) {
+              newOptions[i].weight = lastShare;
+            } else {
+              newOptions[i].weight = equalShare;
+            }
+          });
+        }
       } else {
         // 残りの重みがない場合（100%を超えている場合）
         // 各選択肢の重みを最小値に設定
