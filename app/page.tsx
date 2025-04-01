@@ -3,34 +3,7 @@
 import { useState } from 'react';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Roulette from './components/Roulette';
-
-// 20色以上のカラーパレット
-const COLORS = [
-  '#FF9999', // サーモンピンク
-  '#99CCFF', // スカイブルー
-  '#99FF99', // ライトグリーン
-  '#FFB366', // ライトオレンジ
-  '#FF99CC', // ピンク
-  '#9999FF', // ラベンダー
-  '#FFFF99', // ライトイエロー
-  '#FF99FF', // マゼンタ
-  '#99FFFF', // アクアブルー
-  '#FFB399', // コーラル
-  '#CC99FF', // ライトパープル
-  '#FF9966', // ピーチ
-  '#99FF66', // ライムグリーン
-  '#66B2FF', // ドッジブルー
-  '#FF66B2', // ホットピンク
-  '#B2FF66', // イエローグリーン
-  '#66FFB2', // ミントグリーン
-  '#B266FF', // パープル
-  '#FFB266', // アプリコット
-  '#66FFE6', // ターコイズ
-  '#FF6666', // ライトレッド
-  '#66FF66', // ブライトグリーン
-  '#6666FF', // ブライトブルー
-  '#FFE666', // バナナイエロー
-];
+import { getColor } from './constants/colors';
 
 // 選択肢の型定義
 interface Option {
@@ -366,7 +339,7 @@ export default function Home() {
   };
 
   const getOptionColor = (index: number): string => {
-    return COLORS[index % COLORS.length];
+    return getColor(index);
   };
 
   // 有効な選択肢の数を取得
@@ -423,7 +396,7 @@ export default function Home() {
       return {
         processedOptions: ['オプションを入力してください'],
         processedWeights: [100],
-        processedColors: [COLORS[0]]
+        processedColors: [getColor(0)]
       };
     }
     
@@ -545,7 +518,7 @@ export default function Home() {
     });
     
     // 各選択肢の色を管理するための配列
-    const processedColors = optionIndices.map(index => COLORS[index % COLORS.length]);
+    const processedColors = optionIndices.map(index => getColor(index));
     
     return { processedOptions, processedWeights, processedColors };
   };
