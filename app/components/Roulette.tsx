@@ -44,7 +44,7 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
     <div className="flex flex-col items-center">
       {/* 結果表示 */}
       <motion.div
-        className="text-2xl font-bold mb-4 text-center min-h-[2em]"
+        className="text-2xl sm:text-3xl font-bold mb-8 text-center min-h-[3em] font-heading"
         initial={{ opacity: 0, y: -20 }}
         animate={{ 
           opacity: isSpinning || showResult ? 1 : 0,
@@ -54,7 +54,7 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
       >
         {isSpinning ? (
           <motion.div 
-            className="text-primary"
+            className="text-primary dark:text-primary"
             animate={{ 
               scale: [1, 1.05, 1],
               opacity: [1, 0.8, 1] 
@@ -68,19 +68,35 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
             抽選中...
           </motion.div>
         ) : showResult && selectedIndex !== null && selectedIndex >= 0 && selectedIndex < validOptions.length ? (
-          `「${validOptions[selectedIndex]}」が選ばれました！`
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, type: "spring" }}
+            className="p-3 px-5 rounded-lg bg-accent/10 text-accent dark:bg-accent/20"
+          >
+            「{validOptions[selectedIndex]}」が選ばれました！
+          </motion.div>
         ) : null}
       </motion.div>
 
-      <div className="relative w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] mx-auto mb-8">
-        {/* 針（右側に配置） - 中心から外側に向けて修正 */}
-        <div className="absolute top-1/2 right-0 -translate-y-1/2 z-10 w-10 h-8 flex items-center justify-end">
-          <div className="w-0 h-0 border-t-[16px] border-t-transparent border-b-[16px] border-b-transparent border-r-[24px] border-r-red-600" />
+      <div className="relative w-80 h-80 sm:w-[26rem] sm:h-[26rem] md:w-[30rem] md:h-[30rem] mx-auto mb-10">
+        {/* カスタム装飾: 外側のリング */}
+        <div className="absolute inset-0 rounded-full border-2 border-primary/30 dark:border-primary/20 shadow-lg"></div>
+        
+        {/* 針（右側に配置） */}
+        <div className="absolute top-1/2 right-0 -translate-y-1/2 z-10 w-12 h-10 flex items-center justify-end">
+          <div 
+            className="w-0 h-0 border-t-[20px] border-t-transparent border-b-[20px] border-b-transparent border-r-[30px] border-r-white" 
+            style={{
+              filter: "drop-shadow(0 0 3px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 2px #FFBE0B)",
+              boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)"
+            }}
+          />
         </div>
 
         <motion.svg
           viewBox="0 0 100 100"
-          className="w-full h-full"
+          className="w-full h-full drop-shadow-xl"
           animate={{ rotate: rotation }}
           transition={{
             duration: MIN_DURATION + Math.random() * (MAX_DURATION - MIN_DURATION),
@@ -88,6 +104,9 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
             onComplete: handleRouletteStop
           }}
         >
+          {/* 背景円 */}
+          <circle cx="50" cy="50" r="49" fill="#2D3748" className="dark:opacity-80" />
+          
           {validOptions.map((option, index) => {
             const { path, textX, textY, textRotation, color} = calculateSegmentData(index);
             
@@ -101,11 +120,11 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
                 <path
                   d={path}
                   fill={color}
-                  stroke={isHighlighted ? "yellow" : "white"}
-                  strokeWidth={isHighlighted ? "3" : "1"}
+                  stroke={isHighlighted ? "#FFBE0B" : "rgba(255,255,255,0.6)"}
+                  strokeWidth={isHighlighted ? "3" : "1.5"}
                   style={{
                     transform: isHighlighted ? "scale(1.05)" : "scale(1)",
-                    filter: isHighlighted ? "brightness(1.3)" : "brightness(1)",
+                    filter: isHighlighted ? "brightness(1.3) drop-shadow(0 0 4px rgba(255,255,255,0.3))" : "brightness(1)",
                     transition: "all 0.3s ease"
                   }}
                 />
@@ -120,7 +139,7 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
                   transform={`rotate(${textRotation}, ${textX}, ${textY})`}
                   style={{
                     transition: "all 0.3s ease",
-                    textShadow: "0px 0px 2px rgba(0,0,0,0.7)"
+                    textShadow: "0px 0px 3px rgba(0,0,0,0.9)"
                   }}
                 >
                   {displayText}
@@ -128,20 +147,23 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
               </g>
             );
           })}
+          
+          {/* セグメントの境目に輝く装飾を追加 */}
+          <circle cx="50" cy="50" r="48.5" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" />
         </motion.svg>
         
         {/* 中心の円とボタン */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-white rounded-full border-4 border-primary shadow-lg flex items-center justify-center">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 bg-white dark:bg-gray-800 rounded-full border-4 border-primary dark:border-primary/70 shadow-lg flex items-center justify-center">
           <button
             onClick={startSpinning}
             disabled={validOptions.length < 2}
-            className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors ${
+            className={`w-24 h-24 rounded-full flex items-center justify-center transition-all ${
               validOptions.length < 2
-                ? 'bg-gray-300 cursor-not-allowed'
-                : 'bg-primary hover:bg-primary/90'
+                ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
+                : 'bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 hover:scale-105'
             }`}
           >
-            <PlayIcon className="w-8 h-8 text-white" />
+            <PlayIcon className="w-12 h-12 text-white" />
           </button>
         </div>
       </div>
