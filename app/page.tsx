@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Roulette from './components/Roulette';
 
@@ -43,7 +42,6 @@ export default function Home() {
   const [options, setOptions] = useState<Option[]>([{ text: '', weight: 100 }]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [isEditing, setIsEditing] = useState<boolean[]>([]);
-  const [result, setResult] = useState<string | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
   const addOption = () => {
@@ -355,31 +353,20 @@ export default function Home() {
     if (validOptionsCount < 2) return;
     
     setIsSpinning(true);
-    setResult(null);
   };
 
   const handleResultDetermined = (result: string) => {
     // 「オプションを入力してください」というダミーの結果の場合は特別処理
     if (result === 'オプションを入力してください') {
-      setResult(null);
+      // ここにダミーの結果を処理するロジックを追加
     } else {
-      setResult(result);
+      // ここに実際の結果を処理するロジックを追加
     }
     setIsSpinning(false);
   };
 
   const getOptionColor = (index: number): string => {
     return COLORS[index % COLORS.length];
-  };
-
-  // 有効な選択肢（空でない）とその重みを取得
-  const getValidOptionsWithWeights = () => {
-    return options
-      .filter(opt => opt.text.trim() !== '')
-      .map(opt => ({
-        text: opt.text,
-        weight: opt.weight
-      }));
   };
 
   // 有効な選択肢の数を取得
@@ -499,7 +486,7 @@ export default function Home() {
     });
     
     // 分割が必要な選択肢の2つ目のセグメントを離れた位置に挿入
-    splitIndices.forEach((originalIndex, i) => {
+    splitIndices.forEach((originalIndex) => {
       const option = validOptions[originalIndex];
       const halfWeight = Math.floor(option.weight / 2 * 10) / 10; // 小数点第一位まで計算
       
@@ -512,32 +499,9 @@ export default function Home() {
       
       // セグメント総数
       const totalCount = processedOptions.length;
-      
-      // 理想的には元のセグメントの反対側（180度）に配置
-      // ルーレット上の角度として考えると、半周（totalCount/2）離れた位置が最適
-      let idealOffset = Math.floor(totalCount / 2);
-      
-      // 最低でも2つ以上離れた位置に配置（隣接を防ぐ）
-      const minOffset = Math.max(2, Math.floor(totalCount / 4));
-      
-      // 挿入位置を計算（元のセグメントから半周離れた位置、循環考慮）
-      let insertPosition = (firstSegmentIndex + idealOffset) % totalCount;
-      
-      // 他の分割セグメントと近すぎないように調整
-      // すでに分割されたセグメントの位置を確認
-      const otherSplitSegments = splitIndices
-        .slice(0, i)
-        .map(idx => {
-          // 各分割セグメントの両方の位置を特定
-          const segments = processedOptions
-            .map((opt, optIdx) => optIdx)
-            .filter(optIdx => optionIndices[optIdx] === idx);
-          return segments;
-        })
-        .flat();
-      
-      // 分割セグメント同士が近すぎないように調整
-      let attempts = 0;
+
+      // 最初のセグメントから最も離れた位置を計算
+      const insertPosition = Math.floor((firstSegmentIndex + totalCount / 2) % totalCount);
       let bestPosition = insertPosition;
       let maxDistance = 0;
       
@@ -553,7 +517,7 @@ export default function Home() {
         
         // この位置が他の分割セグメントから十分離れているかチェック
         let minDistanceFromOthers = totalCount;
-        for (const otherPos of otherSplitSegments) {
+        for (const otherPos of splitIndices) {
           const distance = Math.min(
             Math.abs(testPosition - otherPos),
             totalCount - Math.abs(testPosition - otherPos)
