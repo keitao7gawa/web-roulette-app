@@ -335,9 +335,6 @@ export default function Roulette({ options, weights, isSpinning, onSpin, onSegme
           <div className="w-0 h-0 border-t-[16px] border-t-transparent border-b-[16px] border-b-transparent border-r-[24px] border-r-red-600" />
         </div>
 
-        {/* 針の位置を示すガイドライン（デバッグ用、必要に応じて表示/非表示） */}
-        <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 h-[1px] bg-gray-300 opacity-30"></div>
-
         <motion.svg
           viewBox="0 0 100 100"
           className="w-full h-full"
@@ -348,17 +345,6 @@ export default function Roulette({ options, weights, isSpinning, onSpin, onSegme
             onComplete: handleRouletteStop
           }}
         >
-          {/* 中心から針の位置への線（デバッグ用） */}
-          <line
-            x1={CENTRAL_POINT}
-            y1={CENTRAL_POINT}
-            x2={CENTRAL_POINT}
-            y2={0}
-            stroke="rgba(255,0,0,0.3)"
-            strokeWidth="1"
-            strokeDasharray="2,1"
-          />
-          
           {validOptions.map((option, index) => {
             const { path, textX, textY, textRotation, color, isDuplicate, duplicateIndex } = calculateSegmentData(index);
             
