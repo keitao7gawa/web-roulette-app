@@ -524,26 +524,30 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen p-4 sm:p-8">
-      <div className="max-w-xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-bold text-center mb-6 text-primary">
+    <main className="min-h-screen p-4 sm:p-8 bg-gradient-to-br from-light to-white dark:from-dark dark:to-gray-900">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-4xl sm:text-5xl font-bold text-center mb-8 text-accent dark:text-accent tracking-tight">
           ルーレットアプリ
         </h1>
         
         {/* 重みの大きい選択肢を分割して表示する */}
-        <Roulette
-          options={getProcessedOptionsForRouletteDisplay().processedOptions}
-          weights={getProcessedOptionsForRouletteDisplay().processedWeights}
-          colors={getProcessedOptionsForRouletteDisplay().processedColors}
-          isSpinning={isSpinning}
-          onSpin={spinRoulette}
-          onSegmentColorChange={() => {}}
-          onResultDetermined={handleResultDetermined}
-        />
+        <div className="gradient-border mb-10">
+          <div className="p-0.5">
+            <Roulette
+              options={getProcessedOptionsForRouletteDisplay().processedOptions}
+              weights={getProcessedOptionsForRouletteDisplay().processedWeights}
+              colors={getProcessedOptionsForRouletteDisplay().processedColors}
+              isSpinning={isSpinning}
+              onSpin={spinRoulette}
+              onSegmentColorChange={() => {}}
+              onResultDetermined={handleResultDetermined}
+            />
+          </div>
+        </div>
         
-        <div className="space-y-1 mb-6 mt-6">
-          <h2 className="text-lg font-bold text-center mb-3">選択肢リスト</h2>
-          <div className={`grid grid-cols-1 gap-1 ${isSpinning ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className="space-y-2 mb-8 mt-10">
+          <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 text-accent">選択肢リスト</h2>
+          <div className={`grid grid-cols-1 gap-3 ${isSpinning ? 'opacity-50 pointer-events-none' : ''}`}>
             {options.map((option, index) => {
               const validOptions = options.filter(opt => opt.text.trim() !== '');
               const validIndex = validOptions.findIndex(opt => opt === option);
@@ -558,18 +562,18 @@ export default function Home() {
               return (
                 <div 
                   key={index} 
-                  className={`my-1.5 transition-all duration-300 ease-in-out ${
+                  className={`my-2 transition-all duration-300 ease-in-out ${
                     isSpinning ? "notransition" : ""
                   } ${
                     isFocused 
-                      ? "scale-[1.05] z-10" 
-                      : "scale-[0.96] opacity-80"
+                      ? "scale-[1.03] z-10" 
+                      : "scale-[0.98] opacity-90"
                   }`}
                 >
-                  <div className={`flex items-center space-x-2 transition-all duration-200 ${
+                  <div className={`flex items-center space-x-3 transition-all duration-200 ${
                     isFocused 
-                      ? 'bg-white rounded-lg shadow-md p-1.5' 
-                      : 'bg-transparent p-1'
+                      ? 'bg-white dark:bg-gray-800 rounded-lg shadow-md p-2.5' 
+                      : 'bg-transparent p-2'
                   }`}>
                     {/* 入力部分 */}
                     <div className="flex-[2]">
@@ -583,15 +587,15 @@ export default function Home() {
                         placeholder={`選択肢 ${index + 1}`}
                         style={{
                           borderColor: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : '#e5e7eb',
-                          borderWidth: isFocused ? '2px' : '1px',
+                          borderWidth: isFocused ? '4px' : '3px',
                           backgroundColor: isFocused ? 'white' : '#f9fafb',
                         }}
                         className={`w-full rounded-md focus:outline-none transition-all ${
                           isSpinning ? "notransition bg-gray-100" : ""
                         } ${
                           isFocused 
-                            ? "text-base font-medium shadow-sm py-1.5 px-2.5"
-                            : "text-xs py-1 px-2"
+                            ? "text-base sm:text-lg font-medium shadow-sm py-2 px-3 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+                            : "text-sm py-1.5 px-2.5 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-500"
                         }`}
                         disabled={isSpinning}
                       />
@@ -599,7 +603,7 @@ export default function Home() {
                     
                     {/* 重みスライダー（有効な選択肢のみ表示） */}
                     {isValid ? (
-                      <div className="flex-[3] flex items-center gap-2 transition-all duration-200">
+                      <div className="flex-[3] flex items-center gap-3 transition-all duration-200">
                         <input
                           type="range"
                           min="0.1"
@@ -607,20 +611,21 @@ export default function Home() {
                           step="0.1"
                           value={option.weight}
                           onChange={(e) => updateWeight(index, parseFloat(e.target.value))}
-                          className={`flex-1 h-2 bg-gray-200 rounded-full appearance-none ${
+                          className={`flex-1 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none ${
                             isSpinning ? "opacity-50" : ""
                           } ${
                             isFocused ? "opacity-100" : "opacity-80"
                           }`}
                           style={{
-                            accentColor: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : undefined
+                            accentColor: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : undefined,
+                            color: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : undefined
                           }}
                           disabled={isSpinning || validOptionsCount <= 1}
                         />
-                        <span className="w-14 text-right text-xs font-medium transition-all" 
+                        <span className="w-16 text-right font-medium transition-all" 
                               style={{ 
                                 color: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : undefined,
-                                fontSize: isFocused ? '0.875rem' : '0.75rem'
+                                fontSize: isFocused ? '1rem' : '0.875rem'
                               }}>
                           {displayPercentage.toFixed(1)}%
                         </span>
@@ -635,13 +640,13 @@ export default function Home() {
                       className={`flex-none transition-all ${
                         isSpinning 
                           ? "text-gray-400 cursor-not-allowed notransition" 
-                          : "text-red-500 hover:text-red-700"
+                          : "text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                       } ${
                         isFocused ? "opacity-100 scale-110" : "opacity-60 scale-90"
                       }`}
                       disabled={isSpinning}
                     >
-                      <TrashIcon className={`${isFocused ? "w-5 h-5" : "w-3.5 h-3.5"} transition-all`} />
+                      <TrashIcon className={`${isFocused ? "w-5 h-5 sm:w-6 sm:h-6" : "w-4 h-4"} transition-all`} />
                     </button>
                   </div>
                 </div>
@@ -649,33 +654,33 @@ export default function Home() {
             })}
           </div>
           
-          <div className="flex justify-between items-center mt-3">
+          <div className="flex justify-between items-center mt-6 pt-3">
             <button
               onClick={addOption}
-              className={`flex items-center gap-1 text-sm ${
+              className={`flex items-center gap-2 text-sm sm:text-base px-3 py-2 rounded-md ${
                 isSpinning 
                   ? "text-gray-400 cursor-not-allowed notransition" 
-                  : "text-primary hover:text-primary/80"
+                  : "text-primary hover:text-primary/80 hover:bg-primary/10"
               }`}
               disabled={isSpinning}
             >
-              <PlusIcon className="w-4 h-4" />
-              選択肢を追加
+              <PlusIcon className="w-5 h-5" />
+              <span>選択肢を追加</span>
             </button>
             
             <button
               onClick={equalizeWeights}
-              className={`flex items-center gap-1 px-2 py-1 rounded-md text-sm ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm sm:text-base ${
                 isSpinning || validOptionsCount <= 1
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed notransition" 
-                  : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed notransition dark:bg-gray-700 dark:text-gray-500" 
+                  : "bg-secondary/20 text-secondary hover:bg-secondary/30 dark:bg-secondary/10 dark:text-secondary/90 dark:hover:bg-secondary/20"
               }`}
               disabled={isSpinning || validOptionsCount <= 1}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
               </svg>
-              均等化
+              <span>均等化</span>
             </button>
           </div>
         </div>
