@@ -42,6 +42,7 @@ interface Option {
 export default function Home() {
   const [options, setOptions] = useState<Option[]>([{ text: '', weight: 100 }]);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [isEditing, setIsEditing] = useState<boolean[]>([]);
   const [result, setResult] = useState<string | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
@@ -307,15 +308,32 @@ export default function Home() {
         }, 10);
         return;
       }
-      
-      // 条件を満たせば新しい選択肢を追加
-      addOption();
-      setTimeout(() => {
-        const inputs = document.querySelectorAll<HTMLInputElement>('input[type="text"]');
-        if (inputs.length > index + 1) {
-          inputs[index + 1].focus();
-        }
-      }, 10);
+
+      // 編集状態の管理
+      if (!isEditing[index]) {
+        // 編集開始
+        setIsEditing(prev => {
+          const newState = [...prev];
+          newState[index] = true;
+          return newState;
+        });
+      } else {
+        // 編集完了，新しい選択肢を追加
+        setIsEditing(prev => {
+          const newState = [...prev];
+          newState[index] = false;
+          return newState;
+        });
+        
+        // 条件を満たせば新しい選択肢を追加
+        addOption();
+        setTimeout(() => {
+          const inputs = document.querySelectorAll<HTMLInputElement>('input[type="text"]');
+          if (inputs.length > index + 1) {
+            inputs[index + 1].focus();
+          }
+        }, 10);
+      }
     }
     
     if (e.key === 'Backspace' && options[index].text.trim() === '' && options.length > 1) {
