@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
  ---
 description: GitHubワークフローとリリース管理
@@ -44,7 +44,7 @@ alwaysApply: true
 
 ## バージョニング
 
-[セマンティックバージョニング](https://semver.org/lang/ja/)に従います：
+[セマンティックバージョニング](mdc:https:/semver.org/lang/ja)に従います：
 
 - **MAJOR**: 互換性のない変更
 - **MINOR**: 後方互換性のある機能追加
