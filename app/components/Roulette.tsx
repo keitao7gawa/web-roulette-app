@@ -19,11 +19,10 @@ interface RouletteProps {
 const MIN_DURATION = 4;
 const MAX_DURATION = 6;
 
-export default function Roulette({ options, weights, onSegmentColorChange, colors, onResultDetermined }: RouletteProps) {
+export default function Roulette({ options, weights, onSegmentColorChange, colors, onResultDetermined, isSpinning, onSpin }: RouletteProps) {
   const {
     validOptions,
     rotation,
-    isSpinning,
     showResult,
     highlightedIndex,
     selectedIndex,
@@ -39,6 +38,12 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
     onSegmentColorChange,
     onResultDetermined
   });
+
+  // スピンボタンのクリックハンドラ
+  const handleSpinClick = () => {
+    startSpinning();
+    onSpin();
+  };
 
   // 入力が必要なメッセージを表示するかどうか判断
   const showInputMessage = showResult && validOptions.length === 1 && validOptions[0] === 'オプションを入力してください';
@@ -167,10 +172,10 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
         {/* 中心の円とボタン */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 bg-white dark:bg-gray-800 rounded-full border-4 border-primary dark:border-primary/70 shadow-lg flex items-center justify-center">
           <button
-            onClick={startSpinning}
-            disabled={validOptions.length < 2}
+            onClick={handleSpinClick}
+            disabled={validOptions.length < 2 || isSpinning}
             className={`w-24 h-24 rounded-full flex items-center justify-center transition-all ${
-              validOptions.length < 2
+              validOptions.length < 2 || isSpinning
                 ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
                 : 'bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 hover:scale-105'
             }`}

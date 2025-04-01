@@ -102,7 +102,6 @@ export function useRoulette({
   const [showResult, setShowResult] = useState<boolean>(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [isSpinning, setIsSpinning] = useState<boolean>(false);
   const prevRotationRef = useRef<number>(0);
 
   // 結果のインデックスを計算
@@ -124,7 +123,6 @@ export function useRoulette({
 
   // ルーレットの回転処理
   const startSpinning = () => {
-    setIsSpinning(true);
     setShowResult(false);
     setHighlightedIndex(null);
     setSelectedIndex(null);
@@ -146,7 +144,6 @@ export function useRoulette({
 
   // ルーレットが停止したときの処理
   const handleRouletteStop = (): void => {
-    setIsSpinning(false);
     const finalIndex = calculateFinalIndex(rotation);
     
     setHighlightedIndex(finalIndex);
@@ -223,7 +220,6 @@ export function useRoulette({
   return {
     validOptions,
     rotation,
-    isSpinning,
     showResult,
     highlightedIndex,
     selectedIndex,
