@@ -40,6 +40,9 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
     onResultDetermined
   });
 
+  // 入力が必要なメッセージを表示するかどうか判断
+  const showInputMessage = showResult && validOptions.length === 1 && validOptions[0] === 'オプションを入力してください';
+
   return (
     <div className="flex flex-col items-center">
       {/* 結果表示 */}
@@ -47,8 +50,8 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
         className="text-2xl sm:text-3xl font-bold mb-8 text-center min-h-[3em] font-heading"
         initial={{ opacity: 0, y: -20 }}
         animate={{ 
-          opacity: isSpinning || showResult ? 1 : 0,
-          y: isSpinning || showResult ? 0 : -20
+          opacity: isSpinning || showResult || showInputMessage ? 1 : 0,
+          y: isSpinning || showResult || showInputMessage ? 0 : -20
         }}
         transition={{ duration: 0.5 }}
       >
@@ -66,6 +69,15 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
             }}
           >
             抽選中...
+          </motion.div>
+        ) : showInputMessage ? (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, type: "spring" }}
+            className="p-3 px-5 rounded-lg bg-primary/10 text-primary dark:bg-primary/20"
+          >
+            選択肢を入力してください
           </motion.div>
         ) : showResult && selectedIndex !== null && selectedIndex >= 0 && selectedIndex < validOptions.length ? (
           <motion.div 

@@ -331,11 +331,13 @@ export default function Home() {
   const handleResultDetermined = (result: string) => {
     // 「オプションを入力してください」というダミーの結果の場合は特別処理
     if (result === 'オプションを入力してください') {
-      // ここにダミーの結果を処理するロジックを追加
+      // ダミーの選択肢が選ばれた場合、結果表示しない
+      setIsSpinning(false);
+      return;
     } else {
-      // ここに実際の結果を処理するロジックを追加
+      // 実際の結果の場合は通常の処理
+      setIsSpinning(false);
     }
-    setIsSpinning(false);
   };
 
   const getOptionColor = (index: number): string => {
