@@ -104,7 +104,7 @@ export default function Home() {
       // 新しく有効になる場合、既存の有効なオプションから均等に重みを分配
       if (validIndices.length > 0) {
         const totalToShare = 100;
-        const newWeight = Math.floor(totalToShare / (validIndices.length + 1));
+        const newWeight = Math.floor((totalToShare / (validIndices.length + 1)) * 1000) / 1000;
         const remainder = totalToShare - (newWeight * (validIndices.length + 1));
         
         // 既存の有効なオプションに重みを設定
@@ -123,7 +123,7 @@ export default function Home() {
       const weightToRedistribute = optionsList[changedIndex].weight;
       
       if (validIndices.length > 0 && weightToRedistribute > 0) {
-        const weightPerOption = Math.floor(weightToRedistribute / validIndices.length);
+        const weightPerOption = Math.floor((weightToRedistribute / validIndices.length) * 1000) / 1000;
         const remainder = weightToRedistribute - (weightPerOption * validIndices.length);
         
         // 重みを再分配
@@ -231,7 +231,7 @@ export default function Home() {
     const validOptions = optionsList.filter(opt => opt.text.trim() !== '');
     const totalWeight = validOptions.reduce((sum, opt) => sum + opt.weight, 0);
     
-    if (totalWeight === 0 || Math.abs(totalWeight - 100) < 0.1) return; // 調整不要
+    if (totalWeight === 0 || Math.abs(totalWeight - 100) < 0.001) return; // 調整不要
     
     // スケーリング係数
     const scale = 100 / totalWeight;
@@ -248,10 +248,10 @@ export default function Home() {
               const idx = optionsList.findIndex(opt => opt === o);
               return sum + (idx >= 0 ? optionsList[idx].weight : 0);
             }, 0);
-          optionsList[originalIndex].weight = Math.round((100 - otherSum) * 10) / 10;
+          optionsList[originalIndex].weight = Math.round((100 - otherSum) * 1000) / 1000;
         } else {
-          // それ以外のオプションはスケーリング（小数点第一位まで計算）
-          optionsList[originalIndex].weight = Math.round((opt.weight * scale) * 10) / 10;
+          // それ以外のオプションはスケーリング（小数点第三位まで計算）
+          optionsList[originalIndex].weight = Math.round((opt.weight * scale) * 1000) / 1000;
         }
       }
     });
@@ -357,8 +357,8 @@ export default function Home() {
     
     if (validCount <= 1) return; // 有効な選択肢が1つ以下なら何もしない
     
-    // 均等な重みを計算（小数点第一位まで計算）
-    const equalWeight = Math.floor((100 / validCount) * 10) / 10;
+    // 均等な重みを計算（小数点第三位まで計算）
+    const equalWeight = Math.floor((100 / validCount) * 1000) / 1000;
     
     // 全ての有効な選択肢の重みを設定
     validOptions.forEach((opt, index) => {
@@ -372,7 +372,7 @@ export default function Home() {
               const idx = newOptions.findIndex(opt => opt === o);
               return sum + (idx >= 0 ? newOptions[idx].weight : 0);
             }, 0);
-          newOptions[originalIndex].weight = Math.round((100 - otherSum) * 10) / 10;
+          newOptions[originalIndex].weight = Math.round((100 - otherSum) * 1000) / 1000;
         } else {
           newOptions[originalIndex].weight = equalWeight;
         }
