@@ -23,8 +23,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ルーレットアプリ",
-  description: "スタイリッシュなルーレットでランダムな選択をサポート",
+  title: "Webルーレット | Web Roulette EX",
+  description: "無料で使える！重み付けできるルーレットアプリです．",
 };
 
 export default function RootLayout({
