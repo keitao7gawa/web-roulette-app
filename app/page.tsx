@@ -520,7 +520,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen p-4 sm:p-8 bg-gradient-to-br from-light to-white dark:from-dark dark:to-gray-900">
+    <main className="min-h-screen p-4 sm:p-8 bg-gradient-to-br from-light to-white dark:from-gray-950 dark:to-gray-900">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-4xl sm:text-5xl font-bold text-center mb-4 text-accent dark:text-accent tracking-tight">
           ルーレットアプリ
@@ -574,7 +574,7 @@ export default function Home() {
                 >
                   <div className={`flex items-center space-x-3 transition-all duration-200 ${
                     isFocused 
-                      ? 'bg-white dark:bg-gray-800 rounded-lg shadow-md p-2.5' 
+                      ? 'bg-white/5 dark:bg-white/5 backdrop-blur-sm rounded-lg shadow-lg shadow-black/5 dark:shadow-white/5 p-2.5 border border-white/10' 
                       : 'bg-transparent p-2'
                   }`}>
                     {/* 入力部分 */}
@@ -590,14 +590,13 @@ export default function Home() {
                         style={{
                           borderColor: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : '#e5e7eb',
                           borderWidth: isFocused ? '4px' : '3px',
-                          backgroundColor: isFocused ? 'white' : '#f9fafb',
                         }}
                         className={`w-full rounded-md focus:outline-none transition-all ${
                           isSpinning ? "notransition bg-gray-100 cursor-not-allowed" : ""
                         } ${
                           isFocused 
-                            ? "text-base sm:text-lg font-medium shadow-sm py-2 px-3 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
-                            : "text-sm py-1.5 px-2.5 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-500"
+                            ? "text-base sm:text-lg font-medium shadow-sm py-2 px-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500" 
+                            : "text-sm py-1.5 px-2.5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                         }`}
                         disabled={isSpinning}
                         readOnly={isSpinning}
