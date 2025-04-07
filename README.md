@@ -24,7 +24,7 @@
 - [Next.js 15](https://nextjs.org/) - 最新のReactフレームワーク
 - [React 19](https://reactjs.org/) - 最新のUIライブラリ
 - [TypeScript](https://www.typescriptlang.org/) - 型安全なコーディング
-- [Tailwind CSS](https://tailwindcss.com/) - ユーティリティファーストCSSフレームワーク
+- [Tailwind CSS](https://tailwindcss.com/) - CSSフレームワーク
 - [Framer Motion](https://www.framer.com/motion/) - 高度なアニメーション
 
 ## ⚙️ 開発環境のセットアップ
@@ -63,8 +63,9 @@ npm run dev
 
 ## 👏 謝辞
 
-- アイコンは [Heroicons](https://heroicons.com/) を使用
-- 開発には [Cursor IDE](https://cursor.sh/) を活用
+- アイコンに [Heroicons](https://heroicons.com/) を使用させていただきました．  
+- 開発に [Cursor IDE](https://cursor.sh/) を活用しました．
+- 開発に関する貴重なアドバイスをくださった [Yumekawa-chan](https://github.com/Yumekawa-chan) さんに心より感謝いたします．
 
 ## 🔗 リンク
 
