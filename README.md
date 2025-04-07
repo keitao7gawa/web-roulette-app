@@ -1,27 +1,37 @@
-# Web Roulette App
+# Web Roulette Ex
 
-ブラウザで実行できるカスタマイズ可能なルーレットアプリケーションです。複数の選択肢と確率の重みを設定して，ランダムな結果を得ることができます。
+ブラウザで実行できるカスタマイズ可能なルーレットアプリケーションです．複数の選択肢と確率の重みを設定して，ランダムな結果を得ることができます．
 
-## 機能
+![Web Roulette App](public/screenshot.png)
 
-- カスタマイズ可能な選択肢
-- 各選択肢に対する確率の重みを調整可能
-- アニメーションするルーレット
-- モバイルフレンドリーなレスポンシブデザイン
-- ダークモード対応
+## 🌟 特徴と強み
 
-## 技術スタック
+- **確率調整機能** - <u>他のWebルーレットアプリでは珍しい</u>重み付け機能を搭載．スライダーで各選択肢の確率を0.1%単位で細かく調整可能（他のアプリでは実現できない精度）
+- **直感的な確率設定インターフェース** - 視覚的なスライダーで簡単かつ正確に確率を調整できる珍しいWebルーレットアプリ
+- **スマートな重み分配** - 選択肢を追加・削除・編集した際に確率が自動調整されます
+- **確率均等化ワンクリック機能** - 全ての選択肢の確率を瞬時に均等に設定できます
+- **モバイルフレンドリー** - すべてのデバイスで最適な表示と操作性を実現
 
-- [Next.js 15](https://nextjs.org/)
-- [React](https://reactjs.org/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
+## 💻 使い方
 
-## 開発環境のセットアップ
+1. リストに選択肢を追加（無制限に追加可能）
+2. 各選択肢の確率をスライダーで調整
+3. ルーレット中央のボタンをクリックしてスピン！
+4. 結果を確認
+
+## 🔧 技術スタック
+
+- [Next.js 15](https://nextjs.org/) - 最新のReactフレームワーク
+- [React 19](https://reactjs.org/) - 最新のUIライブラリ
+- [TypeScript](https://www.typescriptlang.org/) - 型安全なコーディング
+- [Tailwind CSS](https://tailwindcss.com/) - ユーティリティファーストCSSフレームワーク
+- [Framer Motion](https://www.framer.com/motion/) - 高度なアニメーション
+
+## ⚙️ 開発環境のセットアップ
 
 ```bash
 # リポジトリのクローン
-git clone https://github.com/yourusername/web-roulette-app.git
+git clone https://github.com/keitao7gawa/web-roulette-app.git
 cd web-roulette-app
 
 # 依存関係のインストール
@@ -31,9 +41,9 @@ npm install
 npm run dev
 ```
 
-ブラウザで [http://localhost:3000](http://localhost:3000) を開いてアプリケーションを確認できます。
+ブラウザで [http://localhost:3000](http://localhost:3000) を開いてアプリケーションを確認できます．
 
-## 貢献方法
+## 🤝 貢献方法
 
 1. このリポジトリをフォーク
 2. 機能ブランチを作成 (`git checkout -b feature/amazing-feature`)
@@ -41,11 +51,23 @@ npm run dev
 4. ブランチをプッシュ (`git push origin feature/amazing-feature`)
 5. プルリクエストを作成
 
-## ライセンス
+## 📝 今後の計画
+
+- 確率プリセットの保存と共有
+- 結果のエクスポート機能
+
+
+## 📜 ライセンス
 
 [MIT License](LICENSE)
 
-## 謝辞
+## 👏 謝辞
 
 - アイコンは [Heroicons](https://heroicons.com/) を使用
-- 開発にはCursor IDEを活用
+- 開発には [Cursor IDE](https://cursor.sh/) を活用
+
+## 🔗 リンク
+
+- 公式サイト: [https://www.web-roulette-ex.jp/](https://www.web-roulette-ex.jp/)
+- GitHub: [https://github.com/keitao7gawa/web-roulette-app](https://github.com/keitao7gawa/web-roulette-app)
+- 作者Twitter: [@keitao7gawa](https://twitter.com/keitao7gawa)
