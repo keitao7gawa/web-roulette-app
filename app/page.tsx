@@ -314,7 +314,7 @@ export default function Home() {
 
   const spinRoulette = () => {
     const validOptionsCount = options.filter(opt => opt.text.trim() !== '').length;
-    if (validOptionsCount < 2) return;
+    if (validOptionsCount < 1) return;
     
     setIsSpinning(true);
   };

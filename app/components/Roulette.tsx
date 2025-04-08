@@ -97,8 +97,10 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
       </motion.div>
 
       <div className="relative w-80 h-80 sm:w-[26rem] sm:h-[26rem] md:w-[30rem] md:h-[30rem] mx-auto mb-10">
-        {/* カスタム装飾: 外側のリング */}
-        <div className="absolute inset-0 rounded-full border-2 border-primary/30 dark:border-primary/20 shadow-lg"></div>
+        {/* カスタム装飾: 外側のリング（選択肢が複数ある場合のみ表示） */}
+        {validOptions.length > 1 && (
+          <div className="absolute inset-0 rounded-full border-2 border-primary/30 dark:border-primary/20 shadow-lg"></div>
+        )}
         
         {/* 針（右側に配置） */}
         <div className="absolute top-1/2 right-0 -translate-y-1/2 z-10 w-12 h-10 flex items-center justify-end">
@@ -121,61 +123,110 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
             onComplete: handleRouletteStop
           }}
         >
-          {/* 背景円 */}
-          <circle cx="50" cy="50" r="49" fill="#2D3748" className="dark:opacity-80" />
+          {/* 背景円（選択肢が複数ある場合のみ表示） */}
+          {validOptions.length > 1 && (
+            <circle cx="50" cy="50" r="49" fill="#2D3748" className="dark:opacity-80" />
+          )}
           
           {validOptions.map((option, index) => {
             const { path, textX, textY, textRotation, color} = calculateSegmentData(index);
             
-            const isHighlighted = highlightedIndex === index;
+            const isHighlighted = highlightedIndex === index && showResult;
             const baseFontSize = fontSizes[index];
             const fontSize = isHighlighted ? baseFontSize * 1.25 : baseFontSize;
             const displayText = option ? optimizeTextDisplay(option, fontSize) : '';
             
             return (
               <g key={index}>
-                <path
-                  d={path}
-                  fill={color}
-                  stroke={isHighlighted ? "#FFBE0B" : "rgba(255,255,255,0.6)"}
-                  strokeWidth={isHighlighted ? "3" : "1.5"}
-                  style={{
-                    transform: isHighlighted ? "scale(1.05)" : "scale(1)",
-                    filter: isHighlighted ? "brightness(1.3) drop-shadow(0 0 4px rgba(255,255,255,0.3))" : "brightness(1)",
-                    transition: "all 0.3s ease"
-                  }}
-                />
-                <text
-                  x={textX}
-                  y={textY}
-                  fill="white"
-                  fontSize={fontSize}
-                  fontWeight={isHighlighted ? "bold" : "normal"}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  transform={`rotate(${textRotation}, ${textX}, ${textY})`}
-                  style={{
-                    transition: "all 0.3s ease",
-                    textShadow: "0px 0px 3px rgba(0,0,0,0.9)"
-                  }}
-                >
-                  {displayText}
-                </text>
+                {validOptions.length === 1 ? (
+                  <>
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="48"
+                      fill={colors[0]}
+                      stroke={isHighlighted ? "#FFBE0B" : "rgba(255,255,255,0.2)"}
+                      strokeWidth={isHighlighted ? "4" : "1"}
+                      style={{
+                        transform: isHighlighted ? "scale(1)" : "scale(1)",
+                        filter: isHighlighted ? "brightness(1.3)" : "brightness(1)",
+                        transition: "all 0.5s ease"
+                      }}
+                    />
+                    <text
+                      x={textX}
+                      y={textY}
+                      fill="white"
+                      fontSize={fontSize}
+                      fontWeight={isHighlighted ? "bold" : "normal"}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      transform={`rotate(${textRotation}, ${textX}, ${textY})`}
+                      style={{
+                        transition: "all 0.3s ease",
+                        textShadow: "0px 0px 3px rgba(0,0,0,0.9)"
+                      }}
+                    >
+                      {displayText}
+                    </text>
+                  </>
+                ) : (
+                  <>
+                    <path
+                      d={path}
+                      fill={color}
+                      stroke={isHighlighted ? "#FFBE0B" : "rgba(255,255,255,0.2)"}
+                      strokeWidth={isHighlighted ? "3" : "1"}
+                      style={{
+                        transform: isHighlighted ? "scale(1.02)" : "scale(1)",
+                        filter: isHighlighted ? "brightness(1.3)" : "brightness(1)",
+                        transition: "all 0.5s ease"
+                      }}
+                    />
+                    <text
+                      x={textX}
+                      y={textY}
+                      fill="white"
+                      fontSize={fontSize}
+                      fontWeight={isHighlighted ? "bold" : "normal"}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      transform={`rotate(${textRotation}, ${textX}, ${textY})`}
+                      style={{
+                        transition: "all 0.3s ease",
+                        textShadow: isHighlighted 
+                          ? "0px 0px 5px rgba(255,190,11,0.8), 0px 0px 3px rgba(0,0,0,0.9)"
+                          : "0px 0px 3px rgba(0,0,0,0.9)"
+                      }}
+                    >
+                      {displayText}
+                    </text>
+                  </>
+                )}
               </g>
             );
           })}
           
-          {/* セグメントの境目に輝く装飾を追加 */}
-          <circle cx="50" cy="50" r="48.5" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" />
+          {/* セグメントの境目に輝く装飾を追加（選択肢が1つの場合は表示しない） */}
+          {validOptions.length > 1 && (
+            <circle 
+              cx="50" 
+              cy="50" 
+              r="48.5" 
+              fill="none" 
+              stroke="rgba(255,255,255,0.2)" 
+              strokeWidth="0.5" 
+            />
+          )}
         </motion.svg>
         
         {/* 中心の円とボタン */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 bg-white dark:bg-gray-800 rounded-full border-4 border-primary dark:border-primary/70 shadow-lg flex items-center justify-center">
           <button
             onClick={handleSpinClick}
-            disabled={validOptions.length < 2 || isSpinning}
+            disabled={validOptions.length < 1 || isSpinning}
             className={`w-24 h-24 rounded-full flex items-center justify-center transition-all ${
-              validOptions.length < 2 || isSpinning
+              validOptions.length < 1 || isSpinning
                 ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
                 : 'bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 hover:scale-105'
             }`}

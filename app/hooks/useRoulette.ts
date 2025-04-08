@@ -38,7 +38,8 @@ export function useRoulette({
     if (!options || options.length === 0) {
       return ['サンプル'];
     }
-    return options.filter(option => option && option.trim() !== '');
+    const filtered = options.filter(option => option && option.trim() !== '');
+    return filtered.length === 0 ? ['サンプル'] : filtered;
   }, [options]);
   
   // 有効な選択肢の重みを取得
