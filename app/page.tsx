@@ -463,42 +463,59 @@ export default function Home() {
       // セグメント総数
       const totalCount = processedOptions.length;
 
-      // 最初のセグメントから最も離れた位置を計算
-      const insertPosition = Math.floor((firstSegmentIndex + totalCount / 2) % totalCount);
-      let bestPosition = insertPosition;
-      let maxDistance = 0;
-      
-      // 最適な位置を探索（周囲±3位置）
-      for (let offset = -3; offset <= 3; offset++) {
-        const testPosition = (insertPosition + offset + totalCount) % totalCount;
-        
-        // この位置が元のセグメントから十分離れているかチェック
-        const distanceFromOriginal = Math.min(
-          Math.abs(testPosition - firstSegmentIndex),
-          totalCount - Math.abs(testPosition - firstSegmentIndex)
+      // 最適な挿入位置を探す
+      let bestPosition = -1;
+      let maxMinDistance = -1;
+
+      // すべての可能な位置をチェック
+      for (let pos = 0; pos < totalCount; pos++) {
+        // 同じ選択肢の最初のセグメントからの距離を計算
+        const distanceFromFirst = Math.min(
+          Math.abs(pos - firstSegmentIndex),
+          totalCount - Math.abs(pos - firstSegmentIndex)
         );
-        
-        // この位置が他の分割セグメントから十分離れているかチェック
+
+        // 他の分割された選択肢のセグメントからの距離を計算
         let minDistanceFromOthers = totalCount;
-        for (const otherPos of splitIndices) {
+        for (let i = 0; i < processedOptions.length; i++) {
+          if (optionIndices[i] === originalIndex || !splitIndices.includes(optionIndices[i])) continue;
           const distance = Math.min(
-            Math.abs(testPosition - otherPos),
-            totalCount - Math.abs(testPosition - otherPos)
+            Math.abs(pos - i),
+            totalCount - Math.abs(pos - i)
           );
           minDistanceFromOthers = Math.min(minDistanceFromOthers, distance);
         }
-        
-        // 元のセグメントと他の分割セグメントからの距離の最小値を計算
-        const minTotalDistance = Math.min(distanceFromOriginal, minDistanceFromOthers);
-        
-        // より良い位置が見つかったら更新
-        if (minTotalDistance > maxDistance) {
-          maxDistance = minTotalDistance;
-          bestPosition = testPosition;
+
+        // この位置での最小距離を計算
+        const minDistance = Math.min(distanceFromFirst, minDistanceFromOthers);
+
+        // より良い位置が見つかった場合，更新
+        if (minDistance > maxMinDistance) {
+          maxMinDistance = minDistance;
+          bestPosition = pos;
         }
       }
-      
-      // 最適な位置に2つ目のセグメントを挿入
+
+      // 最適な位置が見つからなかった場合のフォールバック
+      if (bestPosition === -1) {
+        bestPosition = (firstSegmentIndex + Math.floor(totalCount / 2)) % totalCount;
+      }
+
+      // 分割後のセグメント間の距離を計算
+      const segmentDistance = Math.min(
+        Math.abs(bestPosition - firstSegmentIndex),
+        totalCount - Math.abs(bestPosition - firstSegmentIndex)
+      );
+
+      // セグメントが隣り合う場合（距離が1以下）は分割をキャンセル
+      if (segmentDistance <= 1) {
+        // 分割をキャンセルし，元の重みを維持
+        processedOptions[firstSegmentIndex] = option.text;
+        processedWeights[firstSegmentIndex] = option.weight;
+        return; // この選択肢の処理を終了
+      }
+
+      // 十分な距離がある場合は分割を実行
       processedOptions.splice(bestPosition, 0, option.text);
       processedWeights.splice(bestPosition, 0, halfWeight);
       optionIndices.splice(bestPosition, 0, originalIndex);
