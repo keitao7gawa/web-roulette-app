@@ -164,58 +164,49 @@ export default function Home() {
     
     // 他の選択肢がある場合は調整
     if (otherValidIndices.length > 0) {
-      // 合計で100%になるように他の選択肢の重みを比率を保ちながら調整
-      // まず対象の選択肢の重みを更新
-      newOptions[index].weight = newWeight;
+      // まず対象の選択肢の重みを更新（小数点第3位まで計算）
+      newOptions[index].weight = Math.round(newWeight * 1000) / 1000;
       
       // 残りの重み
       const remainingWeight = 100 - newWeight;
       
-      // 残りの重みを他の選択肢に元の比率を保ちながら分配
       if (remainingWeight > 0) {
-        // 他の選択肢の現在の重みの合計
+        // 他の選択肢の現在の重みの合計を計算
         const otherTotalWeight = otherValidIndices.reduce((sum, i) => sum + newOptions[i].weight, 0);
         
         if (otherTotalWeight > 0) {
-          // 各選択肢の元の比率を計算し、残りの重みを分配
-          otherValidIndices.forEach((i, idx) => {
+          // 各選択肢の元の比率を保ちながら残りの重みを分配（小数点第3位まで計算）
+          otherValidIndices.forEach(i => {
             const ratio = newOptions[i].weight / otherTotalWeight;
-            if (idx === otherValidIndices.length - 1) {
-              // 最後の選択肢は丸め誤差を防ぐために、残りを全て割り当て
-              const allocatedWeight = otherValidIndices.slice(0, -1).reduce(
-                (sum, j) => sum + newOptions[j].weight, 
-                newWeight
-              );
-              newOptions[i].weight = Math.round((100 - allocatedWeight) * 10) / 10;
-            } else {
-              // 元の比率に基づいて重みを再分配（小数点第一位まで計算）
-              newOptions[i].weight = Math.round((remainingWeight * ratio) * 10) / 10;
-            }
+            newOptions[i].weight = Math.round(remainingWeight * ratio * 1000) / 1000;
           });
-        } else {
-          // 他の選択肢の重みが全て0の場合は均等分配
-          const equalShare = Math.round((remainingWeight / otherValidIndices.length) * 10) / 10;
-          const totalShares = equalShare * (otherValidIndices.length - 1);
-          const lastShare = Math.round((remainingWeight - totalShares) * 10) / 10;
           
-          otherValidIndices.forEach((i, idx) => {
-            if (idx === otherValidIndices.length - 1) {
-              newOptions[i].weight = lastShare;
-            } else {
-              newOptions[i].weight = equalShare;
-            }
+          // 合計を100%に正規化（小数点第3位まで）
+          const total = newOptions.reduce((sum, opt) => sum + opt.weight, 0);
+          if (Math.abs(total - 100) > 0.001) {
+            const scale = 100 / total;
+            otherValidIndices.forEach(i => {
+              newOptions[i].weight = Math.round(newOptions[i].weight * scale * 1000) / 1000;
+            });
+          }
+        } else {
+          // 他の選択肢の重みが全て0の場合は均等分配（小数点第3位まで計算）
+          const equalShare = Math.round(remainingWeight / otherValidIndices.length * 1000) / 1000;
+          const totalShares = equalShare * otherValidIndices.length;
+          const adjustment = (remainingWeight - totalShares) / otherValidIndices.length;
+          
+          otherValidIndices.forEach(i => {
+            newOptions[i].weight = Math.round((equalShare + adjustment) * 1000) / 1000;
           });
         }
       } else {
         // 残りの重みがない場合（100%を超えている場合）
-        // 各選択肢の重みを最小値に設定
+        const minWeight = 0.001; // 最小値を0.001%に設定
         otherValidIndices.forEach(i => {
-          newOptions[i].weight = 0.1; // 最小値を0.1%に設定
+          newOptions[i].weight = minWeight;
         });
-        
-        // 対象の選択肢の重みを調整して合計が100%になるようにする
-        const otherSum = otherValidIndices.length * 0.1; // 各選択肢の重みが最小値の場合の合計
-        newOptions[index].weight = Math.round((100 - otherSum) * 10) / 10;
+        // 対象の選択肢の重みを調整（小数点第3位まで計算）
+        newOptions[index].weight = Math.round((100 - (otherValidIndices.length * minWeight)) * 1000) / 1000;
       }
     } else {
       // 他の有効な選択肢がない場合は100%に設定
