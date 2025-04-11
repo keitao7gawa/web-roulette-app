@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import Roulette from './components/Roulette';
 import { getColor } from './constants/colors';
 
@@ -404,6 +404,27 @@ export default function Home() {
     setOptions(newOptions);
   };
 
+  // 選択肢をシャッフルする関数
+  const shuffleOptions = () => {
+    if (isSpinning) return;
+    
+    const validOptions = options.filter(opt => opt.text.trim() !== '');
+    const emptyOptions = options.filter(opt => opt.text.trim() === '');
+    
+    if (validOptions.length <= 1) return; // 有効な選択肢が1つ以下なら何もしない
+    
+    // シャッフルアルゴリズム（Fisher-Yates）
+    const shuffledOptions = [...validOptions];
+    for (let i = shuffledOptions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+    }
+    
+    // 空の選択肢を末尾に追加
+    const newOptions = [...shuffledOptions, ...emptyOptions];
+    setOptions(newOptions);
+  };
+
   // 重みの大きい選択肢を表示用に分割する
   const getProcessedOptionsForRouletteDisplay = () => {
     const validOptions = options.filter(opt => opt.text.trim() !== '');
@@ -704,21 +725,37 @@ export default function Home() {
               <span>選択肢を追加</span>
             </button>
             
-            <button
-              onClick={equalizeWeights}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm sm:text-base ${
-                isSpinning || validOptionsCount <= 1
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed notransition dark:bg-gray-700 dark:text-gray-500" 
-                  : "bg-secondary/20 text-secondary hover:bg-secondary/30 dark:bg-secondary/10 dark:text-secondary/90 dark:hover:bg-secondary/20"
-              }`}
-              disabled={isSpinning || validOptionsCount <= 1}
-              aria-disabled={isSpinning || validOptionsCount <= 1}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-              </svg>
-              <span>均等化</span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={shuffleOptions}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm sm:text-base ${
+                  isSpinning || validOptionsCount <= 1
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed notransition dark:bg-gray-700 dark:text-gray-500" 
+                    : "bg-primary/20 text-primary hover:bg-primary/30 dark:bg-primary/10 dark:text-primary/90 dark:hover:bg-primary/20"
+                }`}
+                disabled={isSpinning || validOptionsCount <= 1}
+                aria-disabled={isSpinning || validOptionsCount <= 1}
+              >
+                <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>シャッフル</span>
+              </button>
+              
+              <button
+                onClick={equalizeWeights}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm sm:text-base ${
+                  isSpinning || validOptionsCount <= 1
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed notransition dark:bg-gray-700 dark:text-gray-500" 
+                    : "bg-secondary/20 text-secondary hover:bg-secondary/30 dark:bg-secondary/10 dark:text-secondary/90 dark:hover:bg-secondary/20"
+                }`}
+                disabled={isSpinning || validOptionsCount <= 1}
+                aria-disabled={isSpinning || validOptionsCount <= 1}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                <span>均等化</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
