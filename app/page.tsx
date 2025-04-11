@@ -318,11 +318,19 @@ export default function Home() {
       e.preventDefault();
       removeOption(index);
       
+      // モバイル端末でもPCと同様に，削除後に上の選択肢にフォーカスを移動
       setTimeout(() => {
         const inputs = document.querySelectorAll<HTMLInputElement>('input[type="text"]');
         const focusIndex = index === 0 ? 0 : index - 1;
         if (inputs.length > 0 && inputs[focusIndex]) {
-          inputs[focusIndex].focus();
+          // モバイル端末ではフォーカスを設定する前に少し遅延を入れる
+          if (isMobileDevice()) {
+            setTimeout(() => {
+              inputs[focusIndex].focus();
+            }, 50);
+          } else {
+            inputs[focusIndex].focus();
+          }
         }
       }, 10);
     }
@@ -527,7 +535,7 @@ export default function Home() {
       if (segmentDistance <= 1) {
         // 分割をキャンセルし，元の重みを維持
         processedOptions[firstSegmentIndex] = option.text;
-        processedWeights[firstSegmentIndex] = option.weight;
+        processedWeights.push(option.weight);
         return; // この選択肢の処理を終了
       }
 
