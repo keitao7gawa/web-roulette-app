@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { PlusIcon, TrashIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import Roulette from './components/Roulette';
 import { getColor } from './constants/colors';
+import { Confetti } from './components/Confetti';
 
 // 選択肢の型定義
 interface Option {
@@ -16,6 +17,8 @@ export default function Home() {
   const [isSpinning, setIsSpinning] = useState(false);
   const [isEditing, setIsEditing] = useState<boolean[]>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const rouletteContainerRef = useRef<HTMLDivElement>(null);
 
   // モバイル端末かどうかを判定する関数
   const isMobileDevice = () => {
@@ -350,8 +353,14 @@ export default function Home() {
       setIsSpinning(false);
       return;
     } else {
-      // 実際の結果の場合は通常の処理
+      // 実際の結果の場合は紙吹雪エフェクトを表示
+      setShowConfetti(true);
       setIsSpinning(false);
+      
+      // 3秒後に紙吹雪を非表示にする
+      setTimeout(() => {
+        setShowConfetti(false);
+      }, 3000);
     }
   };
 
@@ -586,8 +595,9 @@ export default function Home() {
         </div>
         
         {/* 重みの大きい選択肢を分割して表示する */}
-        <div className="gradient-border mb-10">
-          <div className="p-0.5">
+        <div className="gradient-border mb-10 relative" ref={rouletteContainerRef}>
+          <div className="p-0.5 relative">
+            <Confetti isActive={showConfetti} containerRef={rouletteContainerRef} />
             <Roulette
               options={getProcessedOptionsForRouletteDisplay().processedOptions}
               weights={getProcessedOptionsForRouletteDisplay().processedWeights}
