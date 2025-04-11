@@ -17,6 +17,11 @@ export default function Home() {
   const [isEditing, setIsEditing] = useState<boolean[]>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
+  // モバイル端末かどうかを判定する関数
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
   const addOption = () => {
     if (isSpinning) return;
     
@@ -271,7 +276,19 @@ export default function Home() {
         return;
       }
 
-      // 編集状態の管理
+      // モバイル端末の場合は1回のEnterで次の選択肢へ
+      if (isMobileDevice()) {
+        addOption();
+        setTimeout(() => {
+          const inputs = document.querySelectorAll<HTMLInputElement>('input[type="text"]');
+          if (inputs.length > index + 1) {
+            inputs[index + 1].focus();
+          }
+        }, 10);
+        return;
+      }
+
+      // PCの場合は編集状態の管理
       if (!isEditing[index]) {
         // 編集開始
         setIsEditing(prev => {
@@ -287,7 +304,6 @@ export default function Home() {
           return newState;
         });
         
-        // 条件を満たせば新しい選択肢を追加
         addOption();
         setTimeout(() => {
           const inputs = document.querySelectorAll<HTMLInputElement>('input[type="text"]');
