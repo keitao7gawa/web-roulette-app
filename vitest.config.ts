@@ -10,6 +10,8 @@ export default defineConfig({
   },
   css: {
     // Disable reading root PostCSS config during tests
-    postcss: null,
+    postcss: {
+      plugins: [],
+    },
   },
 });
