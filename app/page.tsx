@@ -409,7 +409,7 @@ export default function Home() {
                           step="0.1"
                           value={option.weight}
                           onChange={(e) => updateWeight(index, parseFloat(e.target.value))}
-                          className={`flex-1 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none ${
+                          className={`range flex-1 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none ${
                             isSpinning ? "opacity-50" : ""
                           } ${
                             isFocused ? "opacity-100" : "opacity-80"
