@@ -534,7 +534,7 @@ export default function Home() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
           >
-            <Image src="/x-icon.png" alt="X Logo" width={16} height={16} className="w-4 h-4" />
+            <Image src="/x-logo.svg" alt="X Logo" width={16} height={16} className="w-4 h-4" />
             <span>keitao7gawa</span>
           </a>
         </div>
