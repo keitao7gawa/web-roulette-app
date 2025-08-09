@@ -1,16 +1,12 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { PlusIcon, TrashIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 import Roulette from './components/Roulette';
 import { getColor } from './constants/colors';
 import { Confetti } from './components/Confetti';
-
-// 選択肢の型定義
-interface Option {
-  text: string;
-  weight: number; // 重み（1〜100の範囲）
-}
+import type { Option } from './types/option';
 
 export default function Home() {
   const [options, setOptions] = useState<Option[]>([{ text: '', weight: 100 }]);
@@ -581,6 +577,8 @@ export default function Home() {
     return { processedOptions, processedWeights, processedColors };
   };
 
+  const processed = useMemo(() => getProcessedOptionsForRouletteDisplay(), [options]);
+
   return (
     <main className="min-h-screen p-4 sm:p-8 bg-gradient-to-br from-light to-white dark:from-gray-950 dark:to-gray-900">
       <div className="max-w-2xl mx-auto">
@@ -599,9 +597,9 @@ export default function Home() {
           <div className="p-0.5 relative">
             <Confetti isActive={showConfetti} containerRef={rouletteContainerRef} />
             <Roulette
-              options={getProcessedOptionsForRouletteDisplay().processedOptions}
-              weights={getProcessedOptionsForRouletteDisplay().processedWeights}
-              colors={getProcessedOptionsForRouletteDisplay().processedColors}
+              options={processed.processedOptions}
+              weights={processed.processedWeights}
+              colors={processed.processedColors}
               isSpinning={isSpinning}
               onSpin={spinRoulette}
               onSegmentColorChange={() => {}}
@@ -801,7 +799,7 @@ export default function Home() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
           >
-            <img src="/x-icon.png" alt="X Logo" className="w-4 h-4" />
+            <Image src="/vercel.svg" alt="X Logo" width={16} height={16} className="w-4 h-4" />
             <span>keitao7gawa</span>
           </a>
         </div>
