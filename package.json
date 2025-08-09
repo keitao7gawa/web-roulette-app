@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run -c vitest.config.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -27,6 +28,8 @@
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
     "tailwindcss": "^4.0.17",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.0.5",
+    "@vitest/coverage-v8": "^2.0.5"
   }
 }
