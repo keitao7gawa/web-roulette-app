@@ -7,6 +7,12 @@ import Roulette from './components/Roulette';
 import { getColor } from './constants/colors';
 import { Confetti } from './components/Confetti';
 import type { Option } from './types/option';
+import {
+  redistributeWeights as redistributeWeightsUtil,
+  equalizeWeights as equalizeWeightsUtil,
+  shuffleOptions as shuffleOptionsUtil,
+  processForDisplay,
+} from './lib/weights';
 
 export default function Home() {
   const [options, setOptions] = useState<Option[]>([{ text: '', weight: 100 }]);
@@ -80,14 +86,14 @@ export default function Home() {
         // 空から入力ありに変わった場合は有効な選択肢で均等に重みを振り直す
         // まず値を更新してから重みを再分配する
         newOptions[index].text = value;
-        redistributeWeights(newOptions, index, true);
-        setOptions(newOptions);
+        const redistributed = redistributeWeightsUtil(newOptions, index, true);
+        setOptions(redistributed);
         return;
       } else if (!wasEmpty && isNowEmpty) {
         // 入力ありから空に変わった場合は重みを他に分配
-        redistributeWeights(newOptions, index, false);
-        newOptions[index].text = value;
-        setOptions(newOptions);
+        const redistributed = redistributeWeightsUtil(newOptions, index, false);
+        redistributed[index].text = value;
+        setOptions(redistributed);
         return;
       }
     }
@@ -95,53 +101,6 @@ export default function Home() {
     // それ以外の場合は単純に値を更新
     newOptions[index].text = value;
     setOptions(newOptions);
-  };
-
-  // 重みを再分配する関数
-  const redistributeWeights = (optionsList: Option[], changedIndex: number, isNewValid: boolean) => {
-    // 有効なオプションを特定（空でないオプション）
-    const validIndices = optionsList
-      .map((opt, i) => i !== changedIndex && opt.text.trim() !== '' ? i : -1)
-      .filter(i => i !== -1);
-    
-    if (isNewValid) {
-      // 新しく有効になる場合、既存の有効なオプションから均等に重みを分配
-      if (validIndices.length > 0) {
-        const totalToShare = 100;
-        const newWeight = Math.floor((totalToShare / (validIndices.length + 1)) * 1000) / 1000;
-        const remainder = totalToShare - (newWeight * (validIndices.length + 1));
-        
-        // 既存の有効なオプションに重みを設定
-        validIndices.forEach(i => {
-          optionsList[i].weight = newWeight;
-        });
-        
-        // 新しく有効になるオプションに重みを設定
-        optionsList[changedIndex].weight = newWeight + remainder;
-      } else {
-        // 他に有効なオプションがない場合、100%に設定
-        optionsList[changedIndex].weight = 100;
-      }
-    } else {
-      // 無効になる場合、このオプションの重みを他の有効なオプションに分配
-      const weightToRedistribute = optionsList[changedIndex].weight;
-      
-      if (validIndices.length > 0 && weightToRedistribute > 0) {
-        const weightPerOption = Math.floor((weightToRedistribute / validIndices.length) * 1000) / 1000;
-        const remainder = weightToRedistribute - (weightPerOption * validIndices.length);
-        
-        // 重みを再分配
-        validIndices.forEach((i, index) => {
-          optionsList[i].weight += weightPerOption + (index === 0 ? remainder : 0);
-        });
-      }
-      
-      // 無効になるオプションの重みをゼロに
-      optionsList[changedIndex].weight = 0;
-    }
-    
-    // 合計が100%になるよう正規化
-    normalizeWeights(optionsList);
   };
 
   // スライダーで重みを更新
@@ -220,37 +179,7 @@ export default function Home() {
     setOptions(newOptions);
   };
 
-  // 重みの合計が100になるように正規化する
-  const normalizeWeights = (optionsList: Option[]) => {
-    // 有効な選択肢の合計重みを計算
-    const validOptions = optionsList.filter(opt => opt.text.trim() !== '');
-    const totalWeight = validOptions.reduce((sum, opt) => sum + opt.weight, 0);
-    
-    if (totalWeight === 0 || Math.abs(totalWeight - 100) < 0.001) return; // 調整不要
-    
-    // スケーリング係数
-    const scale = 100 / totalWeight;
-    
-    // 各オプションの重みを調整
-    validOptions.forEach((opt, index) => {
-      const originalIndex = optionsList.findIndex(o => o === opt);
-      if (originalIndex >= 0) {
-        if (index === validOptions.length - 1) {
-          // 最後のオプションは合計が100になるように調整（丸め誤差対策）
-          const otherSum = validOptions
-            .slice(0, validOptions.length - 1)
-            .reduce((sum, o) => {
-              const idx = optionsList.findIndex(opt => opt === o);
-              return sum + (idx >= 0 ? optionsList[idx].weight : 0);
-            }, 0);
-          optionsList[originalIndex].weight = Math.round((100 - otherSum) * 1000) / 1000;
-        } else {
-          // それ以外のオプションはスケーリング（小数点第三位まで計算）
-          optionsList[originalIndex].weight = Math.round((opt.weight * scale) * 1000) / 1000;
-        }
-      }
-    });
-  };
+  
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     if (isSpinning) return;
@@ -371,213 +300,19 @@ export default function Home() {
   const equalizeWeights = () => {
     if (isSpinning) return;
     
-    const newOptions = [...options];
-    const validOptions = newOptions.filter(opt => opt.text.trim() !== '');
-    const validCount = validOptions.length;
-    
-    if (validCount <= 1) return; // 有効な選択肢が1つ以下なら何もしない
-    
-    // 均等な重みを計算（小数点第三位まで計算）
-    const equalWeight = Math.floor((100 / validCount) * 1000) / 1000;
-    
-    // 全ての有効な選択肢の重みを設定
-    validOptions.forEach((opt, index) => {
-      const originalIndex = newOptions.findIndex(o => o === opt);
-      if (originalIndex >= 0) {
-        if (index === validOptions.length - 1) {
-          // 最後の選択肢は合計が100になるように調整
-          const otherSum = validOptions
-            .slice(0, validOptions.length - 1)
-            .reduce((sum, o) => {
-              const idx = newOptions.findIndex(opt => opt === o);
-              return sum + (idx >= 0 ? newOptions[idx].weight : 0);
-            }, 0);
-          newOptions[originalIndex].weight = Math.round((100 - otherSum) * 1000) / 1000;
-        } else {
-          newOptions[originalIndex].weight = equalWeight;
-        }
-      }
-    });
-    
-    // 空の選択肢は重み0に設定
-    newOptions.forEach(opt => {
-      if (opt.text.trim() === '') {
-        opt.weight = 0;
-      }
-    });
-    
+    const newOptions = equalizeWeightsUtil(options);
     setOptions(newOptions);
   };
 
   // 選択肢をシャッフルする関数
   const shuffleOptions = () => {
     if (isSpinning) return;
-    
-    const validOptions = options.filter(opt => opt.text.trim() !== '');
-    const emptyOptions = options.filter(opt => opt.text.trim() === '');
-    
-    if (validOptions.length <= 1) return; // 有効な選択肢が1つ以下なら何もしない
-    
-    // シャッフルアルゴリズム（Fisher-Yates）
-    const shuffledOptions = [...validOptions];
-    for (let i = shuffledOptions.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
-    }
-    
-    // 空の選択肢を末尾に追加
-    const newOptions = [...shuffledOptions, ...emptyOptions];
-    setOptions(newOptions);
+    const shuffled = shuffleOptionsUtil(options);
+    if (shuffled !== options) setOptions(shuffled);
   };
 
-  // 重みの大きい選択肢を表示用に分割する
-  const getProcessedOptionsForRouletteDisplay = () => {
-    const validOptions = options.filter(opt => opt.text.trim() !== '');
-    
-    // 有効なオプションがない場合、デフォルトのダミーオプションを返す
-    if (validOptions.length === 0) {
-      return {
-        processedOptions: ['オプションを入力してください'],
-        processedWeights: [100],
-        processedColors: [getColor(0)]
-      };
-    }
-    
-    // 処理後の選択肢と重みを格納する配列
-    const processedOptions: string[] = [];
-    const processedWeights: number[] = [];
-    // 分割された選択肢の元のインデックスを追跡するための配列
-    const optionIndices: number[] = []; // 各セグメントの元の選択肢のインデックス
-    
-    // 分割が必要な選択肢と通常の選択肢を識別
-    const splitIndices: number[] = [];
-    
-    // 動的に分割閾値を計算
-    // 1. 重みの平均値を計算
-    const totalWeight = validOptions.reduce((sum, opt) => sum + opt.weight, 0);
-    const averageWeight = totalWeight / validOptions.length;
-    
-    // 2. 重みの中央値を計算（奇数個なら中央、偶数個なら中央2つの平均）
-    const sortedWeights = [...validOptions].sort((a, b) => a.weight - b.weight).map(opt => opt.weight);
-    const medianWeight = sortedWeights.length % 2 === 0
-      ? (sortedWeights[sortedWeights.length / 2 - 1] + sortedWeights[sortedWeights.length / 2]) / 2
-      : sortedWeights[Math.floor(sortedWeights.length / 2)];
-    
-    // 3. 比較基準値を決定（平均と中央値の小さい方を使用して、極端な値の影響を抑える）
-    const baseWeight = Math.min(averageWeight, medianWeight);
-    
-    // 分割の基準となる倍率（設定可能にしたい場合は状態として保持することも可能）
-    const SPLIT_RATIO = 1.5;
-    
-    // 重みが基準値の何倍以上なら分割するか
-    const splitThreshold = baseWeight * SPLIT_RATIO;
-    
-    // まず分割が必要な選択肢のインデックスを特定
-    validOptions.forEach((option, index) => {
-      if (option.weight >= splitThreshold && option.weight >= 20) { // 最低20%以上の重みがあるものだけ分割
-        splitIndices.push(index);
-      }
-    });
-    
-    // すべての選択肢を一旦配列に追加
-    validOptions.forEach((option, index) => {
-      if (splitIndices.includes(index)) {
-        // 重みを2つに分割
-        const halfWeight = Math.floor(option.weight / 2 * 10) / 10; // 小数点第一位まで計算
-        const remainder = option.weight - (halfWeight * 2);
-        
-        // 1つ目の分割セグメントを追加
-        processedOptions.push(option.text);
-        processedWeights.push(halfWeight + remainder);
-        optionIndices.push(index); // 元の選択肢のインデックスを記録
-      } else {
-        // 閾値未満の場合はそのまま追加
-        processedOptions.push(option.text);
-        processedWeights.push(option.weight);
-        optionIndices.push(index); // 元の選択肢のインデックスを記録
-      }
-    });
-    
-    // 分割が必要な選択肢の2つ目のセグメントを離れた位置に挿入
-    splitIndices.forEach((originalIndex) => {
-      const option = validOptions[originalIndex];
-      const halfWeight = Math.floor(option.weight / 2 * 10) / 10; // 小数点第一位まで計算
-      
-      // 分割したセグメントの最初の位置を探す
-      const firstSegmentIndex = processedOptions.findIndex((opt, idx) => 
-        opt === option.text && optionIndices[idx] === originalIndex
-      );
-      
-      if (firstSegmentIndex === -1) return; // 安全対策：最初のセグメントが見つからない場合はスキップ
-      
-      // セグメント総数
-      const totalCount = processedOptions.length;
-
-      // 最適な挿入位置を探す
-      let bestPosition = -1;
-      let maxMinDistance = -1;
-
-      // すべての可能な位置をチェック
-      for (let pos = 0; pos < totalCount; pos++) {
-        // 同じ選択肢の最初のセグメントからの距離を計算
-        const distanceFromFirst = Math.min(
-          Math.abs(pos - firstSegmentIndex),
-          totalCount - Math.abs(pos - firstSegmentIndex)
-        );
-
-        // 他の分割された選択肢のセグメントからの距離を計算
-        let minDistanceFromOthers = totalCount;
-        for (let i = 0; i < processedOptions.length; i++) {
-          if (optionIndices[i] === originalIndex || !splitIndices.includes(optionIndices[i])) continue;
-          const distance = Math.min(
-            Math.abs(pos - i),
-            totalCount - Math.abs(pos - i)
-          );
-          minDistanceFromOthers = Math.min(minDistanceFromOthers, distance);
-        }
-
-        // この位置での最小距離を計算
-        const minDistance = Math.min(distanceFromFirst, minDistanceFromOthers);
-
-        // より良い位置が見つかった場合，更新
-        if (minDistance > maxMinDistance) {
-          maxMinDistance = minDistance;
-          bestPosition = pos;
-        }
-      }
-
-      // 最適な位置が見つからなかった場合のフォールバック
-      if (bestPosition === -1) {
-        bestPosition = (firstSegmentIndex + Math.floor(totalCount / 2)) % totalCount;
-      }
-
-      // 分割後のセグメント間の距離を計算
-      const segmentDistance = Math.min(
-        Math.abs(bestPosition - firstSegmentIndex),
-        totalCount - Math.abs(bestPosition - firstSegmentIndex)
-      );
-
-      // セグメントが隣り合う場合（距離が1以下）は分割をキャンセル
-      if (segmentDistance <= 1) {
-        // 分割をキャンセルし，元の重みを維持
-        processedOptions[firstSegmentIndex] = option.text;
-        processedWeights.push(option.weight);
-        return; // この選択肢の処理を終了
-      }
-
-      // 十分な距離がある場合は分割を実行
-      processedOptions.splice(bestPosition, 0, option.text);
-      processedWeights.splice(bestPosition, 0, halfWeight);
-      optionIndices.splice(bestPosition, 0, originalIndex);
-    });
-    
-    // 各選択肢の色を管理するための配列
-    const processedColors = optionIndices.map(index => getColor(index));
-    
-    return { processedOptions, processedWeights, processedColors };
-  };
-
-  const processed = useMemo(() => getProcessedOptionsForRouletteDisplay(), [options]);
+  // 表示用データ（ユーティリティで1回評価）
+  const processed = useMemo(() => processForDisplay(options, getColor), [options]);
 
   return (
     <main className="min-h-screen p-4 sm:p-8 bg-gradient-to-br from-light to-white dark:from-gray-950 dark:to-gray-900">
