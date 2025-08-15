@@ -1,0 +1,113 @@
+---
+alwaysApply: false
+---
+# 一括入力 (batch-input) 機能仕様（実装手順つき）
+
+この仕様は現行コード構成に最適化されています。特に `app/components/OptionsEditor.tsx`（client）、`app/lib/weights.ts` のユーティリティ、`app/types/option.ts` の型を前提にします。テストは Vitest を使用します（`vitest.config.ts` 済）。
+
+## 1. 背景・目的
+- 複数の選択肢をコピペで一括登録できる UI を提供し、初期セットアップや大量編集の UX を改善する。
+- 入力ソースは改行区切り、Markdownリスト（`-`/`*`/数字付き）に対応。
+
+## 2. 仕様（要求）
+- 一括入力 UI を `OptionsEditor` に追加（モーダルまたは展開式パネル）。
+- 入力テキストのパースにより `Option[]` を生成。
+- 反映モードを選択可能にする：
+  - 追加モード（既存の有効な選択肢に末尾追加）
+  - 置換モード（既存のすべての選択肢を置き換え）
+- 重みの扱い：
+  - 追加モード: 追加後に `equalizeWeights` で有効な選択肢全体が100%になるよう均等化（空は0）。
+  - 置換モード: 新規有効な選択肢で `equalizeWeights` を実行。
+  - 高度設定（将来拡張）: 「既存の比率を保ったまま新規を均等割当」のオプションを hidden flag として検討。
+- バリデーション：
+  - 空行/空白のみは無視
+  - 上限: 200項目（DoS/パフォーマンス対策）
+  - 重複行は許容（現仕様に合わせる）。重複排除は今は行わない
+  - 最終的に有効行が0件ならエラー表示
+
+## 3. UI 仕様
+- `一括入力` ボタン（`OptionsEditor` のリスト上部か近傍）
+- クリックで展開（シート/モーダル/アコーディオンいずれか。簡易実装はアコーディオン）
+- テキストエリア、サンプル/ヒント表示、モード切替（追加/置換）
+- 反映ボタン押下でパース→適用→テキストエリアを閉じる
+- エラーメッセージはコンポーネント内に控えめに表示
+
+## 4. パース仕様（詳細）
+- 行単位で分割し、前後空白を `trim()`
+- 以下の先頭記号は除去して値とする
+  - `- `, `* `, `+ `
+  - `\d+[.)]\s+`（番号+ドット/カッコ+空白）
+- コメント行は未サポート（先頭 `#` なども通常のテキストとして扱う）
+- 空になった行は破棄
+- 例1,2,3すべてを「りんご」「バナナ」「みかん」として認識
+  - 例1
+  ```
+  - りんご
+  - バナナ
+  - みかん
+  ```
+  - 例2
+  ```
+  りんご
+  バナナ
+  みかん
+  ```
+  - 例3
+  ```
+  1. りんご
+  2. バナナ
+  3. みかん
+  ```
+
+## 5. 実装方針（ファイル/関数レベル）
+
+- 新規: `app/lib/batchInput.ts`
+  - `export function parseBatchInput(raw: string, limit = 200): string[]`
+    - 上記パース仕様で `string[]` を返す
+    - `limit` 超過時は先頭から `limit` 件に丸める
+
+- 変更: `app/components/OptionsEditor.tsx`
+  - ローカル state:
+    - `isBatchOpen: boolean`, `batchText: string`, `batchMode: 'append' | 'replace'`, `batchError: string | null`
+  - UI:
+    - `一括入力` トグルボタン
+    - 展開パネル（`<textarea>`、モード切替、反映ボタン、キャンセル）
+  - ハンドラ:
+    - `handleApplyBatch()`:
+      1. `const lines = parseBatchInput(batchText)`
+      2. `if (lines.length === 0) { setBatchError('有効な行が見つかりません'); return; }`
+      3. `const newOptionObjs = lines.map(text => ({ text, weight: 0 }))`
+      4. `let next = options` を基に、
+         - 追加モード: `next = [...options, ...newOptionObjs]`
+         - 置換モード: `next = [...newOptionObjs]`
+      5. `next = equalizeWeights(next)`
+      6. `setOptions(next); setIsBatchOpen(false); setBatchText('')`
+
+- 既存ユーティリティの活用:
+  - 重みは `app/lib/weights.ts` の `equalizeWeights` を使用
+  - 表示用ロジックは既存 `processForDisplay` のまま（変更不要）
+
+## 6. テスト（Vitest）
+- 新規: `app/lib/batchInput.test.ts`
+  - `parseBatchInput` の基本ケース（改行、`-`/`*`/番号、空行の除外、limit 超過切り捨て）
+  - `OptionsEditor` 経由の結合までは E2E の範疇なので、ここではユーティリティにフォーカス
+- 既存: `app/lib/weights.test.ts` は流用（重み均等化の妥当性担保）
+
+## 7. 受け入れ基準
+- 追加/置換モードともに、反映後の有効選択肢合計重みが 100.000±0.001 に正規化される
+- 200項目超の入力で先頭200件のみが採用される
+- 入力が全て空/無効な場合はエラー表示され、状態は変化しない
+- 既存の個別編集・スピン動作は既存通り
+
+## 8. 実装手順（PR 指針）
+1. `app/lib/batchInput.ts` とユニットテスト `app/lib/batchInput.test.ts` を追加
+2. `OptionsEditor` に UI/状態/ハンドラを追加（アクセシビリティ配慮: ラベル/フォーカス移動）
+3. `npm run test`、`npm run lint`、`npm run build` をグリーンに
+4. スクリーンショットを添付（UI 開閉・反映前後）
+
+## 9. 注意点/非互換の検討
+- 既存の `equalizeWeights` は小数点第三位までの丸めを伴うため、厳密に完全均等にならない場合がある（許容）。
+- 重複テキストの扱いは現仕様（許容）のままとする。将来、設定で重複排除も選べるよう拡張可。
+
+## 10. ブランチ名
+- `feature/batch-input`
