@@ -327,25 +327,39 @@ export default function OptionsEditor() {
                   className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 text-sm"
                   placeholder={`- りんご\n- バナナ\n- みかん`}
                 />
-                <div className="flex items-center gap-4 text-sm">
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="batch-mode"
-                      checked={batchMode === 'append'}
-                      onChange={() => setBatchMode('append')}
-                    />
-                    追加モード
-                  </label>
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="batch-mode"
-                      checked={batchMode === 'replace'}
-                      onChange={() => setBatchMode('replace')}
-                    />
-                    置換モード
-                  </label>
+                {/* Segmented control for mode toggle */}
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">反映方法</span>
+                  <div
+                    role="group"
+                    aria-label="一括入力の反映方法"
+                    className="inline-flex w-fit rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100/60 dark:bg-gray-800/60 p-1"
+                  >
+                    <button
+                      type="button"
+                      aria-pressed={batchMode === 'append'}
+                      onClick={() => setBatchMode('append')}
+                      className={`px-4 py-1.5 sm:px-6 sm:py-2 text-sm sm:text-base font-medium rounded-md transition
+                        ${batchMode === 'append'
+                          ? 'bg-blue-500  text-white shadow dark:bg-gray-900 dark:text-white'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}
+                      `}
+                    >
+                      追加
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={batchMode === 'replace'}
+                      onClick={() => setBatchMode('replace')}
+                      className={`px-4 py-1.5 sm:px-6 sm:py-2 text-sm sm:text-base font-medium rounded-md transition
+                        ${batchMode === 'replace'
+                          ? 'bg-blue-500 text-white shadow dark:bg-gray-900 dark:text-white'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}
+                      `}
+                    >
+                      置換
+                    </button>
+                  </div>
                 </div>
                 {batchError && <p className="text-sm text-red-500">{batchError}</p>}
                 <div className="flex gap-2 justify-end">
@@ -359,7 +373,7 @@ export default function OptionsEditor() {
                   <button
                     type="button"
                     onClick={handleApplyBatch}
-                    className="text-sm px-3 py-2 rounded-md bg-primary/20 text-primary hover:bg-primary/30 dark:bg-primary/10 dark:text-primary/90 dark:hover:bg-primary/20"
+                    className="text-sm px-3 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-900 dark:text-white dark:hover:bg-blue-800"
                   >
                     反映
                   </button>
