@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { PlusIcon, TrashIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, ArrowPathIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 import type { Option } from '../types/option';
 import { getColor } from '../constants/colors';
 import { Confetti } from './Confetti';
@@ -307,9 +307,14 @@ export default function OptionsEditor() {
           <button
             type="button"
             onClick={() => setIsBatchOpen((v) => !v)}
-            className="text-sm px-3 py-2 rounded-md text-primary hover:text-primary/80 hover:bg-primary/10"
+            className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm sm:text-base font-medium
+              bg-gradient-to-r from-primary/90 to-accent/90 text-white shadow-sm
+              hover:from-primary hover:to-accent active:scale-[0.99]
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50
+              transition border border-white/10 dark:border-white/5`}
           >
-            一括入力
+            <ClipboardDocumentListIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span>{isBatchOpen ? '一括入力を閉じる' : '一括入力'}</span>
           </button>
           {isBatchOpen && (
             <div className="mt-3 p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-white/50 dark:bg-gray-900/40">
