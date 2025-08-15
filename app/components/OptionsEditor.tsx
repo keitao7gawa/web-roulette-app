@@ -33,7 +33,22 @@ export default function OptionsEditor() {
 
   const addOption = () => {
     if (isSpinning) return;
-    setOptions([...options, { text: '', weight: 0 }]);
+    // 既に空の選択肢がある場合は新規追加せずにそこへフォーカス
+    const emptyIndex = options.findIndex((opt) => opt.text.trim() === '');
+    if (emptyIndex !== -1) {
+      setTimeout(() => {
+        const inputs = document.querySelectorAll<HTMLInputElement>('input[type="text"]');
+        if (inputs[emptyIndex]) inputs[emptyIndex].focus();
+      }, 10);
+      return;
+    }
+    // 空が無ければ新規作成し、直後にフォーカス
+    const next = [...options, { text: '', weight: 0 }];
+    setOptions(next);
+    setTimeout(() => {
+      const inputs = document.querySelectorAll<HTMLInputElement>('input[type="text"]');
+      if (inputs.length > 0) inputs[inputs.length - 1].focus();
+    }, 10);
   };
 
   const removeOption = (index: number) => {
@@ -262,8 +277,17 @@ export default function OptionsEditor() {
 
     const newOptionObjs: Option[] = parsed.map((text) => ({ text, weight: 0 }));
     let next: Option[] = options;
+    
     if (batchMode === 'append') {
-      next = [...options, ...newOptionObjs];
+      // 既存のオプションから空の選択肢を除外
+      const validExistingOptions = options.filter(opt => opt.text.trim() !== '');
+      
+      // 空の選択肢のみの場合は置換と同様の動作
+      if (validExistingOptions.length === 0) {
+        next = [...newOptionObjs];
+      } else {
+        next = [...validExistingOptions, ...newOptionObjs];
+      }
     } else {
       next = [...newOptionObjs];
     }
