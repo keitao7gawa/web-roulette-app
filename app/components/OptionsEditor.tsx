@@ -13,6 +13,7 @@ import {
   shuffleOptions as shuffleOptionsUtil,
   redistributeWeights as redistributeWeightsUtil,
 } from '../lib/weights';
+import { parseBatchInput } from '../lib/batchInput';
 
 export default function OptionsEditor() {
   const [options, setOptions] = useState<Option[]>([{ text: '', weight: 100 }]);
@@ -21,6 +22,12 @@ export default function OptionsEditor() {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const rouletteContainerRef = useRef<HTMLDivElement>(null);
+
+  // Batch input states
+  const [isBatchOpen, setIsBatchOpen] = useState(false);
+  const [batchText, setBatchText] = useState('');
+  const [batchMode, setBatchMode] = useState<'append' | 'replace'>('append');
+  const [batchError, setBatchError] = useState<string | null>(null);
 
   const isMobileDevice = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -244,6 +251,29 @@ export default function OptionsEditor() {
 
   const processed = useMemo(() => processForDisplay(options, getColor), [options]);
 
+  // Apply batch input
+  const handleApplyBatch = () => {
+    setBatchError(null);
+    const parsed = parseBatchInput(batchText);
+    if (parsed.length === 0) {
+      setBatchError('有効な行が見つかりません');
+      return;
+    }
+
+    const newOptionObjs: Option[] = parsed.map((text) => ({ text, weight: 0 }));
+    let next: Option[] = options;
+    if (batchMode === 'append') {
+      next = [...options, ...newOptionObjs];
+    } else {
+      next = [...newOptionObjs];
+    }
+
+    next = equalizeWeightsUtil(next);
+    setOptions(next);
+    setIsBatchOpen(false);
+    setBatchText('');
+  };
+
   return (
     <main className="min-h-screen p-4 sm:p-8 bg-gradient-to-br from-light to-white dark:from-gray-950 dark:to-gray-900">
       <div className="max-w-2xl mx-auto">
@@ -272,6 +302,67 @@ export default function OptionsEditor() {
 
         <div className="space-y-2 mb-8 mt-10">
           <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 text-accent">選択肢リスト</h2>
+        {/* Batch input panel */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setIsBatchOpen((v) => !v)}
+            className="text-sm px-3 py-2 rounded-md text-primary hover:text-primary/80 hover:bg-primary/10"
+          >
+            一括入力
+          </button>
+          {isBatchOpen && (
+            <div className="mt-3 p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-white/50 dark:bg-gray-900/40">
+              <div className="flex flex-col gap-3">
+                <label className="text-sm text-gray-700 dark:text-gray-300">テキスト（改行/Markdownリスト対応）</label>
+                <textarea
+                  rows={6}
+                  value={batchText}
+                  onChange={(e) => setBatchText(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 text-sm"
+                  placeholder={`- りんご\n- バナナ\n- みかん`}
+                />
+                <div className="flex items-center gap-4 text-sm">
+                  <label className="inline-flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="batch-mode"
+                      checked={batchMode === 'append'}
+                      onChange={() => setBatchMode('append')}
+                    />
+                    追加モード
+                  </label>
+                  <label className="inline-flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="batch-mode"
+                      checked={batchMode === 'replace'}
+                      onChange={() => setBatchMode('replace')}
+                    />
+                    置換モード
+                  </label>
+                </div>
+                {batchError && <p className="text-sm text-red-500">{batchError}</p>}
+                <div className="flex gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setIsBatchOpen(false)}
+                    className="text-sm px-3 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleApplyBatch}
+                    className="text-sm px-3 py-2 rounded-md bg-primary/20 text-primary hover:bg-primary/30 dark:bg-primary/10 dark:text-primary/90 dark:hover:bg-primary/20"
+                  >
+                    反映
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
           <div className={`grid grid-cols-1 gap-3 ${isSpinning ? 'opacity-50 pointer-events-none' : ''}`}>
             {options.map((option, index) => {
               const validOptions = options.filter(opt => opt.text.trim() !== '');

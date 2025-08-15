@@ -46,11 +46,15 @@ describe('weights utils', () => {
       ['', 0],
       ['B', 100],
     ]);
-    const out = redistributeWeights(input, 0, true);
-    const total = out.reduce((s, o) => s + o.weight, 0);
+    // Simulate updateOption that sets text first, then redistributes
+    const updated = input.map((o) => ({ ...o }));
+    updated[0].text = 'A';
+    const out = redistributeWeights(updated, 0, true);
+    const valid = out.filter((o) => o.text.trim() !== '');
+    const total = valid.reduce((s, o) => s + o.weight, 0);
     expect(Math.abs(total - 100)).toBeLessThan(0.001 + 1e-9);
-    expect(out[0].weight).toBeGreaterThan(0);
-    expect(out[1].weight).toBeGreaterThan(0);
+    expect(valid[0].weight).toBeGreaterThan(0);
+    expect(valid[1].weight).toBeGreaterThan(0);
   });
 
   it('redistributeWeights shifts weight away when becoming invalid', () => {
