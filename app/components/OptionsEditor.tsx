@@ -317,63 +317,85 @@ export default function OptionsEditor() {
             <span>{isBatchOpen ? '一括入力を閉じる' : '一括入力'}</span>
           </button>
           {isBatchOpen && (
-            <div className="mt-3 p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-white/50 dark:bg-gray-900/40">
-              <div className="flex flex-col gap-3">
-                <label className="text-sm text-gray-700 dark:text-gray-300">テキスト（改行/Markdownリスト対応）</label>
-                <textarea
-                  rows={6}
-                  value={batchText}
-                  onChange={(e) => setBatchText(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 text-sm"
-                  placeholder={`- りんご\n- バナナ\n- みかん`}
-                />
-                {/* Segmented control for mode toggle */}
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">反映方法</span>
-                  <div
-                    role="group"
-                    aria-label="一括入力の反映方法"
-                    className="inline-flex w-fit rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100/60 dark:bg-gray-800/60 p-1"
-                  >
-                    <button
-                      type="button"
-                      aria-pressed={batchMode === 'append'}
-                      onClick={() => setBatchMode('append')}
-                      className={`px-4 py-1.5 sm:px-6 sm:py-2 text-sm sm:text-base font-medium rounded-md transition
-                        ${batchMode === 'append'
-                          ? 'bg-blue-500  text-white shadow dark:bg-gray-900 dark:text-white'
-                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}
-                      `}
+            <div className="mt-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white/50 dark:bg-gray-900/40 backdrop-blur-sm">
+              <div className="space-y-4">
+                {/* テキストエリアと反映方法を横並びに配置 */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+                  {/* テキストエリアセクション */}
+                  <div className="lg:col-span-2 space-y-2 flex flex-col">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      テキスト（改行/Markdownリスト対応）
+                    </label>
+                    <textarea
+                      value={batchText}
+                      onChange={(e) => setBatchText(e.target.value)}
+                      className="w-full h-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      placeholder={`- りんご\n- バナナ\n- みかん`}
+                    />
+                  </div>
+
+                  {/* 反映方法セクション */}
+                  <div className="space-y-3">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">反映方法</span>
+                    <div
+                      role="group"
+                      aria-label="一括入力の反映方法"
+                      className="flex flex-col gap-2"
                     >
-                      追加
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={batchMode === 'replace'}
-                      onClick={() => setBatchMode('replace')}
-                      className={`px-4 py-1.5 sm:px-6 sm:py-2 text-sm sm:text-base font-medium rounded-md transition
-                        ${batchMode === 'replace'
-                          ? 'bg-blue-500 text-white shadow dark:bg-gray-900 dark:text-white'
-                          : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}
-                      `}
-                    >
-                      置換
-                    </button>
+                      <button
+                        type="button"
+                        aria-pressed={batchMode === 'append'}
+                        onClick={() => setBatchMode('append')}
+                        className={`px-4 py-3 text-sm font-medium rounded-md transition-all duration-200 text-left ${
+                          batchMode === 'append'
+                            ? 'bg-blue-500 text-white shadow-md ring-2 ring-blue-500/20'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                        }`}
+                      >
+                        追加
+                        <div className="text-xs mt-1 opacity-80">
+                          既存の選択肢に追加
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={batchMode === 'replace'}
+                        onClick={() => setBatchMode('replace')}
+                        className={`px-4 py-3 text-sm font-medium rounded-md transition-all duration-200 text-left ${
+                          batchMode === 'replace'
+                            ? 'bg-blue-500 text-white shadow-md ring-2 ring-blue-500/20'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                        }`}
+                      >
+                        置換
+                        <div className="text-xs mt-1 opacity-80">
+                          既存の選択肢を置換
+                        </div>
+                      </button>
+                    </div>
                   </div>
                 </div>
-                {batchError && <p className="text-sm text-red-500">{batchError}</p>}
-                <div className="flex gap-2 justify-end">
+
+                {/* エラーメッセージ */}
+                {batchError && (
+                  <div className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-md border border-red-200 dark:border-red-800">
+                    {batchError}
+                  </div>
+                )}
+
+                {/* アクションボタンセクション */}
+                <div className="flex justify-end gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setIsBatchOpen(false)}
-                    className="text-sm px-3 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                    className="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
                     キャンセル
                   </button>
                   <button
                     type="button"
                     onClick={handleApplyBatch}
-                    className="text-sm px-3 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-900 dark:text-white dark:hover:bg-blue-800"
+                    className="px-4 py-2 text-sm font-medium rounded-md bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 shadow-sm transition-colors"
                   >
                     反映
                   </button>
