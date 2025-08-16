@@ -25,6 +25,27 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Webルーレット | Web Roulette EX",
   description: "無料で使える！重み付けできるルーレットアプリです．",
+  openGraph: {
+    title: "Webルーレット | Web Roulette EX",
+    description: "無料で使える！重み付けできるルーレットアプリです．",
+    type: "website",
+    url: "https://www.web-roulette-ex.jp/",
+    siteName: "Webルーレット | Web Roulette EX",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Webルーレット | Web Roulette EX",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Webルーレット | Web Roulette EX",
+    description: "無料で使える！重み付けできるルーレットアプリです．",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({
