@@ -42,18 +42,20 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
 
   // スピンボタンのクリックハンドラ
   const handleSpinClick = () => {
+    const isPlaceholderOnly = validOptions.length === 1 && validOptions[0] === 'オプションを入力してください';
+    if (isPlaceholderOnly || validOptions.length < 1 || isSpinning) return;
     startSpinning();
     onSpin();
   };
 
   // 入力が必要なメッセージを表示するかどうか判断（入力フェーズのみ）
-  const isInputPhase = appPhase === 'input';
-  const showInputMessage = isInputPhase && validOptions.length === 1 && validOptions[0] === 'オプションを入力してください';
+  const isPlaceholderOnly = validOptions.length === 1 && validOptions[0] === 'オプションを入力してください';
+  const showInputMessage = isPlaceholderOnly;
   const hasValidSelection = selectedIndex !== null && selectedIndex >= 0 && selectedIndex < validOptions.length;
   const shouldShowTopMessage =
     isSpinning ||
     showInputMessage ||
-    appPhase === 'ready' ||
+    (appPhase === 'ready' && !isPlaceholderOnly) ||
     (appPhase === 'result' && showResult && hasValidSelection);
 
   return (
@@ -241,9 +243,9 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 bg-white dark:bg-gray-800 rounded-full border-4 border-primary dark:border-primary/70 shadow-lg flex items-center justify-center">
           <button
             onClick={handleSpinClick}
-            disabled={validOptions.length < 1 || isSpinning}
+            disabled={isPlaceholderOnly || validOptions.length < 1 || isSpinning}
             className={`w-24 h-24 rounded-full flex items-center justify-center transition-all ${
-              validOptions.length < 1 || isSpinning
+              isPlaceholderOnly || validOptions.length < 1 || isSpinning
                 ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
                 : 'bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 hover:scale-105'
             }`}
