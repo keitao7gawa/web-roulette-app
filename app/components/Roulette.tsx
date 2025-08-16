@@ -30,7 +30,8 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
     startSpinning,
     handleRouletteStop,
     calculateSegmentData,
-    optimizeTextDisplay
+    optimizeTextDisplay,
+    appPhase
   } = useRoulette({
     options,
     weights,
@@ -45,8 +46,15 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
     onSpin();
   };
 
-  // 入力が必要なメッセージを表示するかどうか判断
-  const showInputMessage = showResult && validOptions.length === 1 && validOptions[0] === 'オプションを入力してください';
+  // 入力が必要なメッセージを表示するかどうか判断（入力フェーズのみ）
+  const isInputPhase = appPhase === 'input';
+  const showInputMessage = isInputPhase && validOptions.length === 1 && validOptions[0] === 'オプションを入力してください';
+  const hasValidSelection = selectedIndex !== null && selectedIndex >= 0 && selectedIndex < validOptions.length;
+  const shouldShowTopMessage =
+    isSpinning ||
+    showInputMessage ||
+    appPhase === 'ready' ||
+    (appPhase === 'result' && showResult && hasValidSelection);
 
   return (
     <div className="flex flex-col items-center">
@@ -55,8 +63,8 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
         className="text-2xl sm:text-3xl font-bold mb-8 text-center min-h-[3em] font-heading mt-3"
         initial={{ opacity: 0, y: -20 }}
         animate={{ 
-          opacity: isSpinning || showResult || showInputMessage ? 1 : 0,
-          y: isSpinning || showResult || showInputMessage ? 0 : -20
+          opacity: shouldShowTopMessage ? 1 : 0,
+          y: shouldShowTopMessage ? 0 : -20
         }}
         transition={{ duration: 0.5 }}
       >
@@ -84,7 +92,16 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
           >
             選択肢を入力してください
           </motion.div>
-        ) : showResult && selectedIndex !== null && selectedIndex >= 0 && selectedIndex < validOptions.length ? (
+        ) : appPhase === 'ready' ? (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="p-3 px-5 rounded-lg bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200"
+          >
+            中央のボタンを押して抽選を開始
+          </motion.div>
+        ) : appPhase === 'result' && showResult && selectedIndex !== null && selectedIndex >= 0 && selectedIndex < validOptions.length ? (
           <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}

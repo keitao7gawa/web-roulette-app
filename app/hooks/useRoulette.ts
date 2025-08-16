@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 
 // 型定義
 interface RouletteOptions {
@@ -33,6 +33,8 @@ export function useRoulette({
   onSegmentColorChange,
   onResultDetermined
 }: RouletteOptions) {
+  type AppPhase = 'input' | 'ready' | 'spinning' | 'result';
+
   // 空のオプションを除外
   const validOptions = useMemo(() => {
     if (!options || options.length === 0) {
@@ -104,6 +106,16 @@ export function useRoulette({
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const prevRotationRef = useRef<number>(0);
+  const [appPhase, setAppPhase] = useState<AppPhase>('input');
+
+  // 入力状況に応じてフェーズを更新（初期表示でも確実に反映するため useEffect を使用）
+  useEffect(() => {
+    const hasAtLeastOne = validOptions.length > 0 && !(validOptions.length === 1 && validOptions[0] === 'サンプル');
+    setAppPhase((prev) => {
+      if (prev === 'spinning' || prev === 'result') return hasAtLeastOne ? 'ready' : 'input';
+      return hasAtLeastOne ? 'ready' : 'input';
+    });
+  }, [validOptions]);
 
   // 結果のインデックスを計算
   const calculateFinalIndex = (targetDegrees: number): number => {
@@ -127,6 +139,7 @@ export function useRoulette({
     setShowResult(false);
     setHighlightedIndex(null);
     setSelectedIndex(null);
+    setAppPhase('spinning');
 
     // 最低10回転、最大25回転に大幅増加
     const spins = 10 + Math.floor(Math.random() * 16);
@@ -145,11 +158,14 @@ export function useRoulette({
 
   // ルーレットが停止したときの処理
   const handleRouletteStop = (): void => {
+    // スピン中でない場合は初期描画などの完了イベントを無視
+    if (appPhase !== 'spinning') return;
     const finalIndex = calculateFinalIndex(rotation);
     
     setHighlightedIndex(finalIndex);
     setSelectedIndex(finalIndex);
     setShowResult(true);
+    setAppPhase('result');
     
     const selectedColor = colors[finalIndex % colors.length];
     onSegmentColorChange(finalIndex, selectedColor);
@@ -228,6 +244,7 @@ export function useRoulette({
     startSpinning,
     handleRouletteStop,
     calculateSegmentData,
-    optimizeTextDisplay
+    optimizeTextDisplay,
+    appPhase
   };
 } 
