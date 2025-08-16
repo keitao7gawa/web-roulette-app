@@ -14,6 +14,7 @@ import {
   redistributeWeights as redistributeWeightsUtil,
 } from '../lib/weights';
 import { parseBatchInput } from '../lib/batchInput';
+import { hasEmptyOption } from '../lib/validation';
 
 export default function OptionsEditor() {
   const [options, setOptions] = useState<Option[]>([{ text: '', weight: 100 }]);
@@ -325,7 +326,7 @@ export default function OptionsEditor() {
         </div>
 
         <div className="space-y-2 mb-8 mt-10">
-          <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 text-accent">選択肢リスト</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-center mb-2 text-accent">選択肢リスト</h2>
         {/* Batch input panel */}
         <div className="mb-4">
           <button
@@ -493,9 +494,13 @@ export default function OptionsEditor() {
           <div className="flex justify-between items-center mt-6 pt-3">
             <button
               onClick={addOption}
-              className={`flex items-center gap-2 text-sm sm:text-base px-3 py-2 rounded-md ${isSpinning ? 'text-gray-400 cursor-not-allowed notransition' : 'text-primary hover:text-primary/80 hover:bg-primary/10'}`}
-              disabled={isSpinning}
-              aria-disabled={isSpinning}
+              className={`flex items-center gap-2 text-sm sm:text-base px-3 py-2 rounded-md ${
+                isSpinning || hasEmptyOption(options)
+                  ? 'text-gray-400 cursor-not-allowed notransition'
+                  : 'text-primary hover:text-primary/80 hover:bg-primary/10'
+              }`}
+              disabled={isSpinning || hasEmptyOption(options)}
+              aria-disabled={isSpinning || hasEmptyOption(options)}
             >
               <PlusIcon className="w-5 h-5" />
               <span>選択肢を追加</span>
