@@ -14,7 +14,7 @@ import {
   redistributeWeights as redistributeWeightsUtil,
 } from '../lib/weights';
 import { parseBatchInput } from '../lib/batchInput';
-import { hasEmptyOption } from '../lib/validation';
+import { hasEmptyOption, validateWeight, normalizeWeight } from '../lib/validation';
 
 export default function OptionsEditor() {
   const [options, setOptions] = useState<Option[]>([{ text: '', weight: 100 }]);
@@ -23,6 +23,7 @@ export default function OptionsEditor() {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const rouletteContainerRef = useRef<HTMLDivElement>(null);
+  const [weightEditIndex, setWeightEditIndex] = useState<number | null>(null);
 
   // Batch input states
   const [isBatchOpen, setIsBatchOpen] = useState(false);
@@ -469,9 +470,54 @@ export default function OptionsEditor() {
                           style={{ accentColor: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : undefined, color: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : undefined }}
                           disabled={isSpinning || validOptionsCount <= 1}
                         />
-                        <span className="w-16 text-right font-medium transition-all" style={{ color: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : undefined, fontSize: isFocused ? '1rem' : '0.875rem' }}>
-                          {displayPercentage.toFixed(1)}%
-                        </span>
+                        {weightEditIndex === index ? (
+                          <input
+                            id={`weight-input-${index}`}
+                            type="number"
+                            inputMode="decimal"
+                            step={0.1}
+                            min={0.1}
+                            max={100}
+                            autoFocus
+                            defaultValue={isValid ? option.weight.toFixed(1) : ''}
+                            onFocus={(e) => e.currentTarget.select()}
+                            onKeyDown={(e) => {
+                              if (!isValid) return;
+                              if (e.key === 'Escape') {
+                                setWeightEditIndex(null);
+                              }
+                              if (e.key === 'Enter') {
+                                const raw = Number((e.target as HTMLInputElement).value);
+                                const normalized = normalizeWeight(raw, 0.1, 100, 1);
+                                if (validateWeight(normalized)) updateWeight(index, normalized);
+                                setWeightEditIndex(null);
+                              }
+                            }}
+                            onBlur={(e) => {
+                              if (!isValid) return;
+                              const raw = Number(e.currentTarget.value);
+                              const normalized = normalizeWeight(raw, 0.1, 100, 1);
+                              if (validateWeight(normalized) && normalized !== option.weight) {
+                                updateWeight(index, normalized);
+                              }
+                              setWeightEditIndex(null);
+                            }}
+                            className={`w-20 text-right rounded-md px-2 py-1 text-sm border ${
+                              isValid ? 'border-gray-300 dark:border-gray-700' : 'border-transparent'
+                            } bg-white dark:bg-gray-900 text-gray-900 dark:text-white`}
+                            aria-label="割合数値入力"
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setWeightEditIndex(index)}
+                            className="w-16 text-right font-medium transition-all focus:outline-none focus:underline"
+                            style={{ color: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : undefined, fontSize: isFocused ? '1rem' : '0.875rem' }}
+                            aria-label="割合を編集"
+                          >
+                            {displayPercentage.toFixed(1)}%
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div className="flex-[3]"></div>
