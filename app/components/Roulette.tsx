@@ -9,13 +9,13 @@ import { useRoulette } from '../hooks/useRoulette';
 interface RouletteProps {
   options: string[];
   weights?: number[];
-  onSegmentColorChange: (index: number, color: string) => void;
+  onSegmentColorChange: (_index: number, _color: string) => void;
   colors: string[];
-  onResultDetermined?: (result: string) => void;
+  onResultDetermined?: (_result: string) => void;
   isSpinning: boolean;
   onSpin: () => void;
-  onExclude?: (text: string) => void;
-  onExcludeIndex?: (index: number) => void;
+  onExclude?: (_text: string) => void;
+  onExcludeIndex?: (_index: number) => void;
 }
 
 // 定数

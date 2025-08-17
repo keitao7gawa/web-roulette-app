@@ -9,9 +9,7 @@ import { Confetti } from './Confetti';
 import Roulette from './Roulette';
 import {
   processForDisplay,
-  equalizeWeights as equalizeWeightsUtil,
   shuffleOptions as shuffleOptionsUtil,
-  redistributeWeights as redistributeWeightsUtil,
 } from '../lib/weights';
 import { parseBatchInput } from '../lib/batchInput';
 import { hasEmptyOption, validateWeight, normalizeWeight } from '../lib/validation';
@@ -401,7 +399,7 @@ export default function OptionsEditor() {
     return valid.length > 0 ? valid : options; // 全除外回避: 全部除外されたら元配列を渡し、ガードはRoulette側のplaceholderで対応
   }, [options, excludedTexts]);
 
-  const processed = useMemo(() => processForDisplay(filteredOptionsForDisplay, getColor), [filteredOptionsForDisplay, excludedTexts]);
+  const processed = useMemo(() => processForDisplay(filteredOptionsForDisplay, getColor), [filteredOptionsForDisplay]);
 
   // Apply batch input
   const handleApplyBatch = () => {

@@ -5,8 +5,8 @@ interface RouletteOptions {
   options: string[];
   weights?: number[];
   colors: string[];
-  onSegmentColorChange: (index: number, color: string) => void;
-  onResultDetermined?: (result: string) => void;
+  onSegmentColorChange: (_index: number, _color: string) => void;
+  onResultDetermined?: (_result: string) => void;
 }
 
 interface SegmentData {
