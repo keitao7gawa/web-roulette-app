@@ -1,0 +1,135 @@
+---
+alwaysApply: false
+---
+## 概要
+抽選結果として表示された選択肢を、画面上から「除外」できるようにする。  
+「除外」された選択肢はリストから削除されるのではなく、グレーアウトされ選択不可・凍結状態となる。
+
+---
+
+## ルール
+
+- 抽選結果表示時に、結果の横に「除外」ボタン/アクションを設置する（まずは直近の結果のみ対象）。
+- 「除外」操作で、その選択肢は「除外フラグ」が立ち、今後の抽選対象から外れる（weights 計算にも反映）。
+- 除外状態の選択肢は、`OptionsEditor` のリストでグレーアウト・操作不可表示（削除は可能にしても良い）。
+- 「復活（解除）」を提供する（詳細は下記「復活（解除）仕様」）。
+- 除外はローカルストレージに保存し、再読込後も維持する。
+
+---
+
+## UI仕様
+
+- ルーレット上部の結果表示（現状のメッセージブロック）に「除外」ボタンを右側に追加（`app/components/Roulette.tsx`）。
+  - コンテナは既存のメッセージと同じ並び（モバイル縦積み、タブレット以上で横並び）
+  - ボタン文言: 「この選択肢を除外」
+  - アクセシビリティ: `aria-label="この選択肢を抽選対象から除外"`
+  - アイコン: `XCircleIcon`（Heroicons、24/outline）を先頭に表示
+  - Tailwind例:
+    - ベース: `inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition`
+    - カラー: `bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700`
+    - フォーカス: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50`
+    - 無効時: `opacity-50 cursor-not-allowed`
+  - 表示条件: `appPhase === 'result'` かつ 有効な結果がある時のみ。除外済みは非表示。
+
+- `OptionsEditor` のリストに除外状態のビジュアルを付与。
+  - 行全体: `opacity-50`（hover無効）、`pointer-events-none`（編集不可）
+  - バッジ: テキスト右側に `除外中` バッジ（例: `inline-flex items-center px-2 py-0.5 text-[11px] rounded bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200`）
+  - 入力/スライダー/削除ボタンは `disabled`。削除だけは有効でも良い（運用ポリシーに合わせて選択）
+
+- フィードバック（MVP簡易）
+  - 上部に小さなインライン通知（例: `text-xs text-gray-600 dark:text-gray-300`）で「◯◯を除外しました」
+  - もしくは既存メッセージブロックの下に淡色のトースト風ボックス
+
+- レイアウト/アニメーション
+  - 追加ボタンは既存UIの雰囲気（グラデーション/淡色ベース）に合わせ、破壊的カラーは避けて中立色で表示
+  - 除外時は行に `transition-opacity` を適用して滑らかにフェード（200ms）
+  - メッセージ領域は既存 `motion` アニメと整合（fade/scale）
+
+- モバイル最適化
+  - 結果メッセージとボタンは縦積み、ボタンは `mt-2 w-full sm:w-auto`
+  - タップ領域は最低44pxを確保（`py-2` を推奨）
+
+---
+
+## 例外・注意事項
+
+- 全ての選択肢が除外された場合、抽選は行えない（ボタンを非活性化、エラーメッセージ表示等）。
+- 除外済み選択肢を再度除外しようとした場合は何もしない。
+- 除外機能は、将来の履歴機能にも反映される前提で拡張しやすい設計にする。
+
+---
+
+## 保存・データ仕様
+
+- 除外状態は `excludedOptionTexts: string[]`（ユースケース上テキスト一致で判定）で管理（MVP）。
+  - 重複テキストがある場合は全て除外対象（将来はID導入を検討）。
+- 保存方法は LocalStorage: key `roulette:excluded`。
+- `processForDisplay` へは、除外済みテキストをフィルタしてから渡す（`OptionsEditor` 側で前処理）。
+
+### 復活（解除）仕様
+
+- 個別復活: `OptionsEditor` の各除外行に「復活」ボタンを設置。
+  - 文言: 「復活」／aria-label: `この選択肢の除外を解除`
+  - 押下で `excludedOptionTexts` から当該テキストを削除して保存。
+  - 復活後は重みを再正規化（MVPは `equalizeWeights` を適用）
+- 一括復活: リスト上部に「除外を全て解除」リンク/ボタン（任意）
+  - 確認ダイアログ後に全解除→保存→再正規化
+
+---
+
+## ユースケース
+
+1. 抽選結果A, B, Cが表示される
+2. ユーザーがBを除外 → Bがグレーアウト・凍結
+3. 次回抽選時にはA, Cのみが抽選対象となる
+
+---
+
+## 開発メモ/備考
+
+### 実装対象
+
+- `app/components/Roulette.tsx`: 結果表示横に「除外」ボタン追加（最新結果のテキストをemit）
+- `app/components/OptionsEditor.tsx`: 除外リストの保存/読込（LocalStorage）、一覧のグレーアウト/disabled適用、`processForDisplay` への前処理
+- `app/components/OptionsEditor.tsx`: 除外行の「復活」ボタン、（任意）一括復活ボタン
+- `app/lib/weights.ts`: 影響なし（呼び出し元で除外済みを除いた配列を渡す）
+- `app/lib/storage.ts`（新規）: LocalStorage ユーティリティ `loadExcluded()`, `saveExcluded()`
+
+### バリデーション
+
+- 除外後の有効選択肢が0のときはスピン不可
+- 復活後は有効選択肢が1以上になることを保証（等分配で正規化）
+
+### アクセシビリティ
+
+- 除外ボタンには `aria-label` とフォーカスリング、キーボード操作対応
+
+---
+
+## 開発計画（このプロジェクト状況を踏まえて）
+
+1. ストレージ層の作成（小PR）
+   - `app/lib/storage.ts`: `loadExcluded`, `saveExcluded`
+   - ユニットテスト（Vitest）
+
+2. `OptionsEditor` 前処理の導入（小PR）
+   - 除外テキストの読み込み -> options から除外 -> `processForDisplay` へ
+   - リストUIで除外行を disabled/グレーアウト
+   - スピン/均等化/シャッフルのガード更新
+
+3. `Roulette` の「除外」ボタン追加（小PR）
+   - 結果テキストを `onExclude(resultText)` で `OptionsEditor` に伝搬
+   - `OptionsEditor` で excluded セットに保存 + LocalStorage 反映
+
+4. 復活（解除）の実装（小PR）
+   - 除外行に「復活」ボタン追加、動作時に保存更新＋`equalizeWeights`
+   - （任意）一括復活の追加
+
+5. E2E 的確認/テスト
+   - 除外後にスピン不可ケース、除外解除なしの仕様確認
+   - テスト: 除外後の `processForDisplay` 結果が対象外になっていること
+
+6. 仕上げ
+   - トースト/フィードバック、メッセージ文言調整
+
+備考: 既に `OptionsEditor` にロジックが集約されており、前処理で除外を反映する方式が互換性・影響範囲ともに小さく安全です。
