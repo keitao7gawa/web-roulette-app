@@ -9,7 +9,7 @@ import {
 } from './weights';
 
 function opts(values: Array<[string, number]>): Option[] {
-  return values.map(([text, weight]) => ({ text, weight }));
+  return values.map(([text, weight], i) => ({ id: `t-${i}`, text, weight }));
 }
 
 describe('weights utils', () => {

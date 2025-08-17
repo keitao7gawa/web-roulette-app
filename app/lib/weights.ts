@@ -120,6 +120,8 @@ export interface ProcessedDisplay {
   processedOptions: string[];
   processedWeights: number[];
   processedColors: string[];
+  // 各processed要素が元のoptionsList（有効配列）内のどのインデックス由来か
+  processedSourceIndices: number[];
 }
 
 export function processForDisplay(optionsList: Option[], colorResolver: (index: number) => string): ProcessedDisplay {
@@ -129,6 +131,7 @@ export function processForDisplay(optionsList: Option[], colorResolver: (index: 
       processedOptions: ["オプションを入力してください"],
       processedWeights: [100],
       processedColors: [colorResolver(0)],
+      processedSourceIndices: [],
     };
   }
 
@@ -228,5 +231,5 @@ export function processForDisplay(optionsList: Option[], colorResolver: (index: 
 
   const processedColors = optionIndices.map(index => colorResolver(index));
 
-  return { processedOptions, processedWeights, processedColors };
+  return { processedOptions, processedWeights, processedColors, processedSourceIndices: optionIndices };
 }

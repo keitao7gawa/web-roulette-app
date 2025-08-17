@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { PlusIcon, TrashIcon, ArrowPathIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 import type { Option } from '../types/option';
@@ -15,15 +15,111 @@ import {
 } from '../lib/weights';
 import { parseBatchInput } from '../lib/batchInput';
 import { hasEmptyOption, validateWeight, normalizeWeight } from '../lib/validation';
+import { loadExcluded, saveExcluded } from '../lib/storage';
+
+function genId() { return Math.random().toString(36).slice(2, 10); }
 
 export default function OptionsEditor() {
-  const [options, setOptions] = useState<Option[]>([{ text: '', weight: 100 }]);
+  const [options, setOptions] = useState<Option[]>([{ id: genId(), text: '', weight: 100 }]);
+  const [excludedTexts, setExcludedTexts] = useState<string[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [isEditing, setIsEditing] = useState<boolean[]>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const rouletteContainerRef = useRef<HTMLDivElement>(null);
   const [weightEditIndex, setWeightEditIndex] = useState<number | null>(null);
+  // load excluded on mount
+  useEffect(() => {
+    setExcludedTexts(loadExcluded());
+  }, []);
+
+  // オプション変更時に存在しないIDの除外フラグを自動クリーンアップ
+  useEffect(() => {
+    const presentIds = new Set(options.map((o) => o.id));
+    const cleaned = excludedTexts.filter((id) => presentIds.has(id));
+    if (cleaned.length !== excludedTexts.length) {
+      setExcludedTexts(cleaned);
+      saveExcluded(cleaned);
+    }
+  }, [options, excludedTexts]);
+
+  const excludeText = (targetTextOrId: string) => {
+    if (!targetTextOrId) return;
+    // 1) 重みの再分配（除外するテキストの重みを残りに等分配）
+    setOptions((current) => {
+      const clone = current.map((o) => ({ ...o }));
+      // 対象: 最初に一致した1件のみ（id一致優先、なければ最初のtext一致）
+      let targetIndex = clone.findIndex((o) => o.id === targetTextOrId);
+      if (targetIndex === -1) targetIndex = clone.findIndex((o) => o.text === targetTextOrId && o.text.trim() !== '');
+      if (targetIndex === -1) return clone;
+
+      const alreadyExcluded = new Set(excludedTexts); // ここはidのセット
+
+      const totalToSpread = clone[targetIndex].weight;
+      clone[targetIndex].weight = 0;
+
+      // 分配先: 有効かつ未除外かつ対象インデックス以外
+      const recipientIdx = clone
+        .map((o, i) => ({ o, i }))
+        .filter(({ o, i }) => o.text.trim() !== '' && i !== targetIndex && !alreadyExcluded.has(o.id))
+        .map(({ i }) => i);
+      if (recipientIdx.length > 0 && totalToSpread > 0) {
+        const add = Math.round((totalToSpread / recipientIdx.length) * 1000) / 1000;
+        recipientIdx.forEach((i) => {
+          clone[i].weight = Math.round((clone[i].weight + add) * 1000) / 1000;
+        });
+      }
+      return clone;
+    });
+
+    // 2) 除外リストへ反映
+    setExcludedTexts((prev) => {
+      // 保存はidで行う（なければtext）
+      const target = options.find((o) => o.id === targetTextOrId)?.id || options.find((o) => o.text === targetTextOrId)?.id || targetTextOrId;
+      const next = Array.from(new Set([...prev, target]));
+      saveExcluded(next);
+      return next;
+    });
+  };
+
+  const reviveText = (id: string) => {
+    setExcludedTexts((prev) => {
+      const next = prev.filter((t) => t !== id);
+      saveExcluded(next);
+      // 等分配（簡易）
+      setOptions((cur) => equalizeNonExcluded(cur));
+      return next;
+    });
+  };
+
+  // 重みの等分配（未除外のみ対象）
+  const equalizeNonExcluded = (optionsList: Option[]): Option[] => {
+    const excludedSet = new Set(excludedTexts);
+    const cloned = optionsList.map(o => ({ ...o }));
+    // 対象（未除外・非空）のインデックス
+    const recipients = cloned
+      .map((o, i) => (o.text.trim() !== '' && !excludedSet.has(o.id) ? i : -1))
+      .filter(i => i !== -1) as number[];
+    if (recipients.length === 0) return cloned;
+    if (recipients.length === 1) {
+      // 1件なら100%、他は0に
+      cloned[recipients[0]].weight = 100;
+    } else {
+      const eq = Math.floor((100 / recipients.length) * 1000) / 1000;
+      recipients.forEach((i, idx) => {
+        if (idx === recipients.length - 1) {
+          const otherSum = recipients.slice(0, -1).reduce((s) => s + eq, 0);
+          cloned[i].weight = Math.round((100 - otherSum) * 1000) / 1000;
+        } else {
+          cloned[i].weight = eq;
+        }
+      });
+    }
+    // 除外・空行は0
+    cloned.forEach((o) => { if (o.text.trim() === '' || excludedSet.has(o.id)) o.weight = 0; });
+    return cloned;
+  };
+
 
   // Batch input states
   const [isBatchOpen, setIsBatchOpen] = useState(false);
@@ -45,7 +141,7 @@ export default function OptionsEditor() {
       return;
     }
     // 空が無ければ新規作成し、直後にフォーカス
-    const next = [...options, { text: '', weight: 0 }];
+    const next = [...options, { id: genId(), text: '', weight: 0 }];
     setOptions(next);
     setTimeout(() => {
       const inputs = document.querySelectorAll<HTMLInputElement>('input[type="text"]');
@@ -60,23 +156,25 @@ export default function OptionsEditor() {
     const remainingOptions = options.filter((_, i) => i !== index);
 
     if (optionToRemove.text.trim() !== '' && optionToRemove.weight > 0) {
-      const validOptions = remainingOptions.filter(opt => opt.text.trim() !== '');
-      const validCount = validOptions.length;
+      const excludedSet = new Set(excludedTexts);
+      const validNonExcluded = remainingOptions.filter(opt => opt.text.trim() !== '' && !excludedSet.has(opt.id));
+      const validCount = validNonExcluded.length;
 
       if (validCount > 0) {
         const weightToRedistribute = optionToRemove.weight;
-        const weightPerOption = Math.floor(weightToRedistribute / validCount);
-        const remainder = weightToRedistribute - weightPerOption * validCount;
+        const addPer = Math.round((weightToRedistribute / validCount) * 1000) / 1000;
+        const distributedTotal = addPer * validCount;
+        const remainder = Math.round((weightToRedistribute - distributedTotal) * 1000) / 1000;
 
         const updatedOptions = remainingOptions.map(opt => {
-          if (opt.text.trim() === '') return opt;
-          return { ...opt, weight: opt.weight + weightPerOption };
+          if (opt.text.trim() === '' || excludedSet.has(opt.id)) return opt;
+          return { ...opt, weight: Math.round((opt.weight + addPer) * 1000) / 1000 };
         });
 
-        if (remainder > 0 && validOptions.length > 0) {
-          const firstValidIndex = remainingOptions.findIndex(opt => opt.text.trim() !== '');
+        if (validNonExcluded.length > 0 && Math.abs(remainder) > 0) {
+          const firstValidIndex = remainingOptions.findIndex(opt => opt.text.trim() !== '' && !excludedSet.has(opt.id));
           if (firstValidIndex >= 0) {
-            updatedOptions[firstValidIndex].weight += remainder;
+            updatedOptions[firstValidIndex].weight = Math.round((updatedOptions[firstValidIndex].weight + remainder) * 1000) / 1000;
           }
         }
 
@@ -98,13 +196,13 @@ export default function OptionsEditor() {
     if ((wasEmpty && !isNowEmpty) || (!wasEmpty && isNowEmpty)) {
       if (wasEmpty && !isNowEmpty) {
         newOptions[index].text = value;
-        const redistributed = redistributeWeightsUtil(newOptions, index, true);
-        setOptions(redistributed);
+        const equalized = equalizeNonExcluded(newOptions);
+        setOptions(equalized);
         return;
       } else if (!wasEmpty && isNowEmpty) {
-        const redistributed = redistributeWeightsUtil(newOptions, index, false);
-        redistributed[index].text = value;
-        setOptions(redistributed);
+        newOptions[index].text = value;
+        const equalized = equalizeNonExcluded(newOptions);
+        setOptions(equalized);
         return;
       }
     }
@@ -118,14 +216,15 @@ export default function OptionsEditor() {
 
     const newOptions = [...options];
     const currentOption = newOptions[index];
-    if (currentOption.text.trim() === '') return;
+    if (currentOption.text.trim() === '' || excludedTexts.includes(currentOption.id)) return;
 
     const oldWeight = currentOption.weight;
     const delta = newWeight - oldWeight;
     if (delta === 0) return;
 
+    const excludedSetForUpdate = new Set(excludedTexts);
     const otherValidIndices = newOptions
-      .map((opt, i) => (i !== index && opt.text.trim() !== '' ? i : -1))
+      .map((opt, i) => (i !== index && opt.text.trim() !== '' && !excludedSetForUpdate.has(opt.id) ? i : -1))
       .filter(i => i !== -1);
 
     if (otherValidIndices.length > 0) {
@@ -252,11 +351,11 @@ export default function OptionsEditor() {
   };
 
   const getOptionColor = (index: number): string => getColor(index);
-  const validOptionsCount = options.filter(opt => opt.text.trim() !== '').length;
+  const validOptionsCount = options.filter(opt => opt.text.trim() !== '' && !excludedTexts.includes(opt.id)).length;
 
   const equalizeWeights = () => {
     if (isSpinning) return;
-    const newOptions = equalizeWeightsUtil(options);
+    const newOptions = equalizeNonExcluded(options);
     setOptions(newOptions);
   };
 
@@ -266,7 +365,43 @@ export default function OptionsEditor() {
     if (shuffled !== options) setOptions(shuffled);
   };
 
-  const processed = useMemo(() => processForDisplay(options, getColor), [options]);
+  const reviveAll = () => {
+    if (excludedTexts.length === 0) return;
+    // 1) 除外IDをクリア
+    setExcludedTexts([]);
+    saveExcluded([]);
+    // 2) 全有効項目で等分配（空は0）
+    setOptions((prev) => {
+      const cloned = prev.map((o) => ({ ...o }));
+      const recipients = cloned
+        .map((o, i) => (o.text.trim() !== '' ? i : -1))
+        .filter((i) => i !== -1) as number[];
+      if (recipients.length === 0) return cloned;
+      if (recipients.length === 1) {
+        cloned[recipients[0]].weight = 100;
+        return cloned;
+      }
+      const eq = Math.floor((100 / recipients.length) * 1000) / 1000;
+      recipients.forEach((i, idx) => {
+        if (idx === recipients.length - 1) {
+          const otherSum = eq * (recipients.length - 1);
+          cloned[i].weight = Math.round((100 - otherSum) * 1000) / 1000;
+        } else {
+          cloned[i].weight = eq;
+        }
+      });
+      return cloned;
+    });
+  };
+
+  const filteredOptionsForDisplay = useMemo(() => {
+    const excludedSet = new Set(excludedTexts);
+    // オブジェクト同一性を保つため、除外されていない元の参照をそのまま返す
+    const valid = options.filter((o) => o.text.trim() !== '' && !excludedSet.has(o.id));
+    return valid.length > 0 ? valid : options; // 全除外回避: 全部除外されたら元配列を渡し、ガードはRoulette側のplaceholderで対応
+  }, [options, excludedTexts]);
+
+  const processed = useMemo(() => processForDisplay(filteredOptionsForDisplay, getColor), [filteredOptionsForDisplay, excludedTexts]);
 
   // Apply batch input
   const handleApplyBatch = () => {
@@ -277,24 +412,17 @@ export default function OptionsEditor() {
       return;
     }
 
-    const newOptionObjs: Option[] = parsed.map((text) => ({ text, weight: 0 }));
+    const newOptionObjs: Option[] = parsed.map((text) => ({ id: genId(), text, weight: 0 }));
     let next: Option[] = options;
     
     if (batchMode === 'append') {
-      // 既存のオプションから空の選択肢を除外
-      const validExistingOptions = options.filter(opt => opt.text.trim() !== '');
-      
-      // 空の選択肢のみの場合は置換と同様の動作
-      if (validExistingOptions.length === 0) {
-        next = [...newOptionObjs];
-      } else {
-        next = [...validExistingOptions, ...newOptionObjs];
-      }
+      // 既存を維持したまま新規を末尾に追加（除外は残す・空は0%のまま）
+      next = [...options, ...newOptionObjs];
     } else {
       next = [...newOptionObjs];
     }
 
-    next = equalizeWeightsUtil(next);
+    next = equalizeNonExcluded(next);
     setOptions(next);
     setIsBatchOpen(false);
     setBatchText('');
@@ -322,6 +450,14 @@ export default function OptionsEditor() {
               onSpin={spinRoulette}
               onSegmentColorChange={() => {}}
               onResultDetermined={handleResultDetermined}
+              onExclude={(text) => excludeText(text)}
+              onExcludeIndex={(displayIdx) => {
+                // displayIdx は processed配列のインデックス -> SourceIndices から特定
+                const src = processed.processedSourceIndices?.[displayIdx];
+                if (src == null || src < 0) return;
+                const target = filteredOptionsForDisplay[src];
+                if (target) excludeText(target.id);
+              }}
             />
           </div>
         </div>
@@ -432,32 +568,48 @@ export default function OptionsEditor() {
         </div>
           <div className={`grid grid-cols-1 gap-3 ${isSpinning ? 'opacity-50 pointer-events-none' : ''}`}>
             {options.map((option, index) => {
-              const validOptions = options.filter(opt => opt.text.trim() !== '');
-              const validIndex = validOptions.findIndex(opt => opt === option);
+              // 有効配列の位置はUI色付けには使用しない（ルーレット表示順に合わせる）
               const isFocused = focusedIndex === index;
               const isValid = option.text.trim() !== '';
+              const isExcluded = excludedTexts.includes(option.id);
+              const displayIndex = !isExcluded && isValid
+                ? filteredOptionsForDisplay.findIndex((o) => o === option)
+                : -1;
+              const displayColor = displayIndex >= 0 ? getOptionColor(displayIndex) : undefined;
               const displayPercentage = isValid ? option.weight : 0;
 
               return (
-                <div key={index} className={`my-2 transition-all duration-300 ease-in-out ${isSpinning ? 'notransition' : ''} ${isFocused ? 'scale-[1.03] z-10' : 'scale-[0.98] opacity-90'}`}>
+                <div key={index} className={`my-2 transition-all duration-300 ease-in-out ${isSpinning ? 'notransition' : ''} ${isFocused ? 'scale-[1.03] z-10' : 'scale-[0.98] opacity-90'} ${isExcluded ? 'opacity-50' : ''}`}>
                   <div className={`flex items-center space-x-3 transition-all duration-200 ${isFocused ? 'bg-white/5 dark:bg-white/5 backdrop-blur-sm rounded-lg shadow-lg shadow-black/5 dark:shadow-white/5 p-2.5 border border-white/10' : 'bg-transparent p-2'}`}>
                     <div className="flex-[2]">
-                      <input
-                        type="text"
-                        value={option.text}
-                        onChange={(e) => updateOption(index, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, index)}
-                        onFocus={() => setFocusedIndex(index)}
-                        onBlur={() => setFocusedIndex(null)}
-                        placeholder={`選択肢 ${index + 1}`}
-                        style={{ borderColor: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : '#e5e7eb', borderWidth: isFocused ? '4px' : '3px' }}
-                        className={`w-full rounded-md focus:outline-none transition-all ${isSpinning ? 'notransition bg-gray-100 cursor-not-allowed' : ''} ${isFocused ? 'text-base sm:text-lg font-medium shadow-sm py-2 px-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500' : 'text-sm py-1.5 px-2.5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400'}`}
-                        disabled={isSpinning}
-                        readOnly={isSpinning}
-                      />
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={option.text}
+                          onChange={(e) => updateOption(index, e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(e, index)}
+                          onFocus={() => setFocusedIndex(index)}
+                          onBlur={() => setFocusedIndex(null)}
+                          placeholder={`選択肢 ${index + 1}`}
+                          style={{ borderColor: isValid && !isExcluded && displayColor ? displayColor : '#e5e7eb', borderWidth: isFocused ? '4px' : '3px' }}
+                          className={`flex-1 rounded-md focus:outline-none transition-all ${isSpinning ? 'notransition bg-gray-100 cursor-not-allowed' : ''} ${isFocused ? 'text-base sm:text-lg font-medium shadow-sm py-2 px-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500' : 'text-sm py-1.5 px-2.5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400'}`}
+                          disabled={isSpinning}
+                          readOnly={isSpinning}
+                        />
+                        {isExcluded && (
+                          <button
+                            type="button"
+                            onClick={() => reviveText(option.id)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                            aria-label="この選択肢の除外を解除"
+                          >
+                            復活
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    {isValid ? (
+                    {isValid && !isExcluded ? (
                       <div className="flex-[3] flex items-center gap-3 transition-all duration-200">
                         <input
                           type="range"
@@ -467,7 +619,7 @@ export default function OptionsEditor() {
                           value={option.weight}
                           onChange={(e) => updateWeight(index, parseFloat(e.target.value))}
                           className={`range flex-1 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none ${isSpinning ? 'opacity-50' : ''} ${isFocused ? 'opacity-100' : 'opacity-80'}`}
-                          style={{ accentColor: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : undefined, color: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : undefined }}
+                          style={{ accentColor: isValid && !isExcluded ? displayColor : undefined, color: isValid && !isExcluded ? displayColor : undefined }}
                           disabled={isSpinning || validOptionsCount <= 1}
                         />
                         {weightEditIndex === index ? (
@@ -512,7 +664,7 @@ export default function OptionsEditor() {
                             type="button"
                             onClick={() => setWeightEditIndex(index)}
                             className="w-16 text-right font-medium transition-all focus:outline-none focus:underline"
-                            style={{ color: isValid ? getOptionColor(validIndex !== -1 ? validIndex : 0) : undefined, fontSize: isFocused ? '1rem' : '0.875rem' }}
+                            style={{ color: isValid && !isExcluded ? displayColor : undefined, fontSize: isFocused ? '1rem' : '0.875rem' }}
                             aria-label="割合を編集"
                           >
                             {displayPercentage.toFixed(1)}%
@@ -520,7 +672,9 @@ export default function OptionsEditor() {
                         )}
                       </div>
                     ) : (
-                      <div className="flex-[3]"></div>
+                      <div className="flex-[3] flex items-center gap-3">
+                        <span className="text-xs text-gray-400">—</span>
+                      </div>
                     )}
 
                     <button
@@ -531,6 +685,7 @@ export default function OptionsEditor() {
                     >
                       <TrashIcon className={`${isFocused ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-4 h-4'} transition-all`} />
                     </button>
+                    {/* 復活ボタンは右側スライダー領域に移動済み */}
                   </div>
                 </div>
               );
@@ -553,6 +708,21 @@ export default function OptionsEditor() {
             </button>
 
             <div className="flex gap-2">
+              {excludedTexts.length >= 2 && (
+                <button
+                  onClick={reviveAll}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm sm:text-base ${
+                    isSpinning
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed notransition dark:bg-gray-700 dark:text-gray-500'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                  disabled={isSpinning}
+                  aria-disabled={isSpinning}
+                  aria-label="除外された選択肢をすべて復活"
+                >
+                  一括復活
+                </button>
+              )}
               <button
                 onClick={shuffleOptions}
                 className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm sm:text-base ${isSpinning || validOptionsCount <= 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed notransition dark:bg-gray-700 dark:text-gray-500' : 'bg-primary/20 text-primary hover:bg-primary/30 dark:bg-primary/10 dark:text-primary/90 dark:hover:bg-primary/20'}`}

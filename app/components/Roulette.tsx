@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { PlayIcon } from '@heroicons/react/24/solid';
+import { XCircleIcon } from '@heroicons/react/24/outline';
 import { useRoulette } from '../hooks/useRoulette';
 
 // 型定義
@@ -13,13 +14,15 @@ interface RouletteProps {
   onResultDetermined?: (result: string) => void;
   isSpinning: boolean;
   onSpin: () => void;
+  onExclude?: (text: string) => void;
+  onExcludeIndex?: (index: number) => void;
 }
 
 // 定数
 const MIN_DURATION = 4;
 const MAX_DURATION = 6;
 
-export default function Roulette({ options, weights, onSegmentColorChange, colors, onResultDetermined, isSpinning, onSpin }: RouletteProps) {
+export default function Roulette({ options, weights, onSegmentColorChange, colors, onResultDetermined, isSpinning, onSpin, onExclude, onExcludeIndex }: RouletteProps) {
   const {
     validOptions,
     rotation,
@@ -108,9 +111,23 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
-            className="p-3 px-5 rounded-lg bg-accent/10 text-accent dark:bg-accent/20"
+            className="p-3 px-5 rounded-lg bg-accent/10 text-accent dark:bg-accent/20 inline-flex items-center gap-3 flex-wrap justify-center"
           >
-            「{validOptions[selectedIndex]}」が選ばれました！
+            <span>「{validOptions[selectedIndex]}」が選ばれました！</span>
+            {(onExcludeIndex || onExclude) && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onExcludeIndex) onExcludeIndex(selectedIndex);
+                  else if (onExclude) onExclude(validOptions[selectedIndex]);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
+                aria-label="この選択肢を抽選対象から除外"
+              >
+                <XCircleIcon className="w-4 h-4" />
+                この選択肢を除外
+              </button>
+            )}
           </motion.div>
         ) : null}
       </motion.div>
