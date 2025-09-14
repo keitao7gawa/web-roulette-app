@@ -8,8 +8,10 @@ import type { Option } from '../types/option';
 import { getColor } from '../constants/colors';
 import { Confetti } from './Confetti';
 import Roulette from './Roulette';
+import RouletteMiniWindow from './RouletteMiniWindow';
 import LanguageSelector from './LanguageSelector';
 import LanguageInitializer from './LanguageInitializer';
+import { useIntersectionObserver } from '@/app/hooks/useIntersectionObserver';
 import {
   processForDisplay,
   shuffleOptions as shuffleOptionsUtil,
@@ -28,6 +30,12 @@ export default function OptionsEditor({ translations }: OptionsEditorProps) {
   const t = useTranslations('ui');
   const finalT = translations || t;
   const [options, setOptions] = useState<Option[]>([{ id: genId(), text: '', weight: 100 }]);
+  
+  // Intersection Observer でルーレットの可視性を監視
+  const [rouletteRef, isRouletteVisible] = useIntersectionObserver({
+    threshold: 0.2, // ルーレットの10%が見えたら可視とみなす
+    rootMargin: '0px'
+  });
   const [excludedTexts, setExcludedTexts] = useState<string[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [isEditing, setIsEditing] = useState<boolean[]>([]);
@@ -439,6 +447,12 @@ export default function OptionsEditor({ translations }: OptionsEditorProps) {
     <main className="min-h-screen p-4 sm:p-8 bg-gradient-to-br from-light to-white dark:from-gray-950 dark:to-gray-900">
       <LanguageInitializer />
       <LanguageSelector />
+      <RouletteMiniWindow
+        options={processed.processedOptions}
+        weights={processed.processedWeights}
+        colors={processed.processedColors}
+        isVisible={!isRouletteVisible} // ルーレットが見えない時にミニウィンドウを表示
+      />
       <div className="max-w-2xl mx-auto">
         <h1 className="text-4xl sm:text-5xl font-bold text-center mb-4 text-accent dark:text-accent tracking-tight pt-12 sm:pt-16">{finalT('title')}</h1>
 
@@ -449,7 +463,7 @@ export default function OptionsEditor({ translations }: OptionsEditorProps) {
         </div>
 
         <div className="gradient-border mb-10 relative" ref={rouletteContainerRef}>
-          <div className="p-0.5 relative">
+          <div className="p-0.5 relative" ref={rouletteRef}>
             <Confetti isActive={showConfetti} containerRef={rouletteContainerRef} />
             <Roulette
               options={processed.processedOptions}
