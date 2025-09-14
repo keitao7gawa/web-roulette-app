@@ -22,7 +22,12 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+// ベースURLの設定（環境に応じて動的に設定）
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
 export const metadata: Metadata = {
+  metadataBase: new URL(baseUrl),
   title: "Webルーレット | Web Roulette EX",
   description: "無料で使える！重み付けできるルーレットアプリです．",
   openGraph: {
