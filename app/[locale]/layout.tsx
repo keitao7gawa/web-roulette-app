@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, getMessages } from 'next-intl/server';
+import { NextIntlClientProvider } from 'next-intl';
 
 // ベースURLの設定（環境に応じて動的に設定）
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
@@ -41,14 +42,19 @@ export async function generateMetadata({
   };
 }
 
-export default function LocaleLayout({
+export default async function LocaleLayout({
   children,
+  params
 }: Readonly<{
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }>) {
+  const { locale } = await params;
+  const messages = await getMessages({ locale });
+
   return (
-    <>
+    <NextIntlClientProvider messages={messages} locale={locale}>
       {children}
-    </>
+    </NextIntlClientProvider>
   );
 }

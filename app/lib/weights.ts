@@ -124,11 +124,11 @@ export interface ProcessedDisplay {
   processedSourceIndices: number[];
 }
 
-export function processForDisplay(optionsList: Option[], colorResolver: (_index: number) => string): ProcessedDisplay {
+export function processForDisplay(optionsList: Option[], colorResolver: (_index: number) => string, noOptionsText: string = "オプションを入力してください"): ProcessedDisplay {
   const validOptions = optionsList.filter(opt => opt.text.trim() !== "");
   if (validOptions.length === 0) {
     return {
-      processedOptions: ["オプションを入力してください"],
+      processedOptions: [noOptionsText],
       processedWeights: [100],
       processedColors: [colorResolver(0)],
       processedSourceIndices: [],

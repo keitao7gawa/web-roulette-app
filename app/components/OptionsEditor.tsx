@@ -8,6 +8,7 @@ import type { Option } from '../types/option';
 import { getColor } from '../constants/colors';
 import { Confetti } from './Confetti';
 import Roulette from './Roulette';
+import LanguageSelector from './LanguageSelector';
 import {
   processForDisplay,
   shuffleOptions as shuffleOptionsUtil,
@@ -18,8 +19,13 @@ import { loadExcluded, saveExcluded } from '../lib/storage';
 
 function genId() { return Math.random().toString(36).slice(2, 10); }
 
-export default function OptionsEditor() {
+interface OptionsEditorProps {
+  translations?: any;
+}
+
+export default function OptionsEditor({ translations }: OptionsEditorProps) {
   const t = useTranslations('ui');
+  const finalT = translations || t;
   const [options, setOptions] = useState<Option[]>([{ id: genId(), text: '', weight: 100 }]);
   const [excludedTexts, setExcludedTexts] = useState<string[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -340,7 +346,7 @@ export default function OptionsEditor() {
   };
 
   const handleResultDetermined = (result: string) => {
-    if (result === 'オプションを入力してください') {
+    if (result === finalT('roulette.noOptions')) {
       setIsSpinning(false);
       return;
     } else {
@@ -401,7 +407,7 @@ export default function OptionsEditor() {
     return valid.length > 0 ? valid : options; // 全除外回避: 全部除外されたら元配列を渡し、ガードはRoulette側のplaceholderで対応
   }, [options, excludedTexts]);
 
-  const processed = useMemo(() => processForDisplay(filteredOptionsForDisplay, getColor), [filteredOptionsForDisplay]);
+  const processed = useMemo(() => processForDisplay(filteredOptionsForDisplay, getColor, finalT('roulette.noOptions')), [filteredOptionsForDisplay, finalT]);
 
   // Apply batch input
   const handleApplyBatch = () => {
@@ -430,13 +436,14 @@ export default function OptionsEditor() {
 
   return (
     <main className="min-h-screen p-4 sm:p-8 bg-gradient-to-br from-light to-white dark:from-gray-950 dark:to-gray-900">
+      <LanguageSelector />
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl sm:text-5xl font-bold text-center mb-4 text-accent dark:text-accent tracking-tight">{t('title')}</h1>
+        <h1 className="text-4xl sm:text-5xl font-bold text-center mb-4 text-accent dark:text-accent tracking-tight">{finalT('title')}</h1>
 
         <div className="text-center mb-8 text-gray-700 dark:text-gray-200 text-base sm:text-lg md:text-xl flex flex-col items-center font-medium">
-          <p className="mb-2">{t('instructions.addOptions')}</p>
-          <p className="mb-2">{t('instructions.adjustProbability')}</p>
-          <p className="mb-2">{t('instructions.spin')}</p>
+          <p className="mb-2">{finalT('instructions.addOptions')}</p>
+          <p className="mb-2">{finalT('instructions.adjustProbability')}</p>
+          <p className="mb-2">{finalT('instructions.spin')}</p>
         </div>
 
         <div className="gradient-border mb-10 relative" ref={rouletteContainerRef}>
