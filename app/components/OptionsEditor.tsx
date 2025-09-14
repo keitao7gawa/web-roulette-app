@@ -21,7 +21,7 @@ import { loadExcluded, saveExcluded } from '../lib/storage';
 function genId() { return Math.random().toString(36).slice(2, 10); }
 
 interface OptionsEditorProps {
-  translations?: any;
+  translations?: (_key: string, _values?: Record<string, string | number>) => string;
 }
 
 export default function OptionsEditor({ translations }: OptionsEditorProps) {

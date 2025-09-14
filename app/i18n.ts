@@ -15,7 +15,7 @@ export function isValidLocale(locale: string): locale is Locale {
 // next-intl設定
 export default getRequestConfig(async ({ locale }) => {
   // デフォルト言語にフォールバック
-  const validLocale = isValidLocale(locale) ? locale : defaultLocale;
+  const validLocale = isValidLocale(locale || '') ? (locale as Locale) : defaultLocale;
 
   let messages;
   try {

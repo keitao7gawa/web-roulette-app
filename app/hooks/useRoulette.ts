@@ -60,7 +60,7 @@ export function useRoulette({
   const segmentAngles = useMemo(() => {
     if (totalWeight === 0) return validOptions.map(() => 360 / validOptions.length);
     return validWeights.map(weight => (weight / totalWeight) * 360);
-  }, [validWeights, totalWeight, validOptions.length]);
+  }, [validWeights, totalWeight, validOptions]);
 
   // フォントサイズの計算
   const fontSizes = useMemo(() => {
