@@ -44,7 +44,11 @@
       "title": "선택지 목록",
       "placeholder": "선택지 {number}",
       "percentage": "{value}%",
-      "excluded": "제외됨"
+      "excluded": "제외됨",
+      "ariaLabels": {
+        "revive": "이 선택지 복구",
+        "percentage": "비율 입력"
+      }
     },
     "footer": {
       "privacy": "개인정보 보호",

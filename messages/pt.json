@@ -44,7 +44,11 @@
       "title": "Lista de Opções",
       "placeholder": "Opção {number}",
       "percentage": "{value}%",
-      "excluded": "Excluído"
+      "excluded": "Excluído",
+      "ariaLabels": {
+        "revive": "Reviver esta opção",
+        "percentage": "Entrada de porcentagem"
+      }
     },
     "footer": {
       "privacy": "Proteção de Privacidade",

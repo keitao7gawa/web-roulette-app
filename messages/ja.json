@@ -44,7 +44,11 @@
       "title": "選択肢リスト",
       "placeholder": "選択肢 {number}",
       "percentage": "{value}%",
-      "excluded": "除外"
+      "excluded": "除外",
+      "ariaLabels": {
+        "revive": "この選択肢の除外を解除",
+        "percentage": "割合数値入力"
+      }
     },
     "footer": {
       "privacy": "プライバシー保護",

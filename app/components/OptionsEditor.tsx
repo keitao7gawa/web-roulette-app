@@ -9,6 +9,7 @@ import { getColor } from '../constants/colors';
 import { Confetti } from './Confetti';
 import Roulette from './Roulette';
 import LanguageSelector from './LanguageSelector';
+import LanguageInitializer from './LanguageInitializer';
 import {
   processForDisplay,
   shuffleOptions as shuffleOptionsUtil,
@@ -436,6 +437,7 @@ export default function OptionsEditor({ translations }: OptionsEditorProps) {
 
   return (
     <main className="min-h-screen p-4 sm:p-8 bg-gradient-to-br from-light to-white dark:from-gray-950 dark:to-gray-900">
+      <LanguageInitializer />
       <LanguageSelector />
       <div className="max-w-2xl mx-auto">
         <h1 className="text-4xl sm:text-5xl font-bold text-center mb-4 text-accent dark:text-accent tracking-tight">{finalT('title')}</h1>
@@ -508,7 +510,7 @@ export default function OptionsEditor({ translations }: OptionsEditorProps) {
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('batchInput.methodLabel')}</span>
                     <div
                       role="group"
-                      aria-label="一括入力の反映方法"
+                      aria-label={finalT('batchInput.methodLabel')}
                       className="flex flex-col gap-2"
                     >
                       <button
@@ -608,7 +610,7 @@ export default function OptionsEditor({ translations }: OptionsEditorProps) {
                             type="button"
                             onClick={() => reviveText(option.id)}
                             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-                            aria-label="この選択肢の除外を解除"
+                            aria-label={finalT('options.ariaLabels.revive')}
                           >
                             {t('buttons.revive')}
                           </button>
@@ -664,7 +666,7 @@ export default function OptionsEditor({ translations }: OptionsEditorProps) {
                             className={`w-20 text-right rounded-md px-2 py-1 text-sm border ${
                               isValid ? 'border-gray-300 dark:border-gray-700' : 'border-transparent'
                             } bg-white dark:bg-gray-900 text-gray-900 dark:text-white`}
-                            aria-label="割合数値入力"
+                            aria-label={finalT('options.ariaLabels.percentage')}
                           />
                         ) : (
                           <button
