@@ -440,7 +440,7 @@ export default function OptionsEditor({ translations }: OptionsEditorProps) {
       <LanguageInitializer />
       <LanguageSelector />
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl sm:text-5xl font-bold text-center mb-4 text-accent dark:text-accent tracking-tight">{finalT('title')}</h1>
+        <h1 className="text-4xl sm:text-5xl font-bold text-center mb-4 text-accent dark:text-accent tracking-tight pt-12 sm:pt-16">{finalT('title')}</h1>
 
         <div className="text-center mb-8 text-gray-700 dark:text-gray-200 text-base sm:text-lg md:text-xl flex flex-col items-center font-medium">
           <p className="mb-2">{finalT('instructions.addOptions')}</p>

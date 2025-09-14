@@ -31,16 +31,16 @@ export default function LanguageSelector() {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="fixed top-4 right-4 z-50 sm:top-6 sm:right-6">
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white text-sm font-medium shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-all duration-200"
+          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white text-sm font-medium shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-all duration-200"
         >
-          <GlobeAltIcon className="w-4 h-4" />
-          <span className="text-lg">{currentLanguage.flag}</span>
-          <span className="hidden sm:inline">{currentLanguage.name}</span>
-          <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+          <GlobeAltIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+          <span className="text-sm sm:text-lg">{currentLanguage.flag}</span>
+          <span className="hidden sm:inline text-sm">{currentLanguage.name}</span>
+          <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {isOpen && (
