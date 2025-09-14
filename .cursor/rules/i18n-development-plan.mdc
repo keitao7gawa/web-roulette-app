@@ -1,0 +1,317 @@
+
+# Web Roulette App多言語対応開発計画
+
+## 1. 目的
+
+GitHub Issue #1 を解消し、Web Roulette Appを英語、韓国語、ポルトガル語に対応させる。また、i18nを用いてブラウザの設定言語に合わせてUIの言語が自動的に切り替わるようにする。
+
+## 2. 開発要件
+
+### 対応言語
+- **日本語 (ja)**: 現在のデフォルト言語
+- **英語 (en)**: 国際的な利用者向け
+- **韓国語 (ko)**: 韓国市場向け
+- **ポルトガル語 (pt)**: ブラジル・ポルトガル市場向け
+
+### 技術要件
+- **フレームワーク**: Next.js 15 + React 19 + TypeScript
+- **i18nライブラリ**: `next-intl` (Next.js App Router対応)
+- **言語切り替え**: ブラウザの言語設定を自動検知
+- **フォールバック**: 対応言語がない場合は英語にフォールバック
+- **既存機能**: ルーレット機能、重み付け、除外機能、一括入力機能を維持
+
+## 3. 現在のプロジェクト分析
+
+### 既存の日本語テキスト（翻訳対象）
+- **メタデータ**: タイトル、説明文、Open Graph設定
+- **UI要素**: ボタン、ラベル、メッセージ
+- **ルーレット関連**: 抽選中、結果表示、除外機能
+- **フォーム**: 入力フィールド、バリデーション
+- **フッター**: プライバシー情報、リンク
+
+### プロジェクト構造
+```
+app/
+├── layout.tsx          # メタデータ設定
+├── page.tsx           # メインページ
+├── components/
+│   ├── OptionsEditor.tsx  # メインUI（多数の日本語テキスト）
+│   ├── Roulette.tsx       # ルーレット表示
+│   └── Confetti.tsx       # アニメーション
+├── hooks/
+├── lib/
+└── types/
+```
+
+## 4. 開発計画
+
+### Phase 1: 基盤構築
+1. **next-intlライブラリの導入**
+   ```bash
+   npm install next-intl
+   ```
+
+2. **プロジェクト構造の変更**
+   ```
+   app/
+   ├── [locale]/
+   │   ├── layout.tsx      # 言語別レイアウト
+   │   ├── page.tsx        # 言語別ページ
+   │   └── globals.css
+   ├── i18n.ts             # i18n設定
+   └── middleware.ts       # 言語検出ミドルウェア
+   messages/
+   ├── en.json
+   ├── ja.json
+   ├── ko.json
+   └── pt.json
+   ```
+
+3. **設定ファイルの作成**
+   - `i18n.ts`: next-intl設定
+   - `middleware.ts`: 言語検出とリダイレクト
+   - `next.config.ts`: 国際化設定
+
+### Phase 2: 翻訳リソース作成
+1. **翻訳ファイル構造**
+   ```json
+   {
+     "metadata": {
+       "title": "Web Roulette | Web Roulette EX",
+       "description": "Free roulette app with weight adjustment!",
+       "siteName": "Web Roulette | Web Roulette EX"
+     },
+     "ui": {
+       "title": "Roulette App",
+       "instructions": {
+         "addOptions": "📋 Add options to the list",
+         "adjustProbability": "📊 Adjust with probability slider",
+         "spin": "🎯 Press the center button to spin!"
+       },
+       "buttons": {
+         "addOption": "Add Option",
+         "shuffle": "Shuffle",
+         "equalize": "Equalize",
+         "batchInput": "Batch Input",
+         "cancel": "Cancel",
+         "apply": "Apply",
+         "revive": "Revive",
+         "reviveAll": "Revive All"
+       },
+       "roulette": {
+         "spinning": "Drawing...",
+         "ready": "Press the center button to start drawing",
+         "noOptions": "Please enter options",
+         "result": "「{option}」was selected!",
+         "exclude": "Exclude this option"
+       },
+       "batchInput": {
+         "title": "Batch Input",
+         "close": "Close Batch Input",
+         "textLabel": "Text (supports line breaks/Markdown lists)",
+         "methodLabel": "Apply Method",
+         "append": "Append",
+         "appendDesc": "Add to existing options",
+         "replace": "Replace",
+         "replaceDesc": "Replace existing options",
+         "placeholder": "- Apple\n- Banana\n- Orange",
+         "error": "No valid lines found"
+       },
+       "options": {
+         "placeholder": "Option {number}",
+         "percentage": "{value}%",
+         "excluded": "Excluded"
+       },
+       "footer": {
+         "privacy": "Privacy Protection",
+         "privacyDesc": "All processing is completed in the browser, and data is never sent externally.",
+         "github": "View on GitHub",
+         "twitter": "keitao7gawa"
+       }
+     }
+   }
+   ```
+
+2. **翻訳対象テキストの特定**
+   - OptionsEditor.tsx: 約50箇所の日本語テキスト
+   - Roulette.tsx: 約10箇所のメッセージ
+   - layout.tsx: メタデータ関連
+   - その他のUI要素
+
+### Phase 3: UI国際化対応
+1. **コンポーネントの更新**
+   ```tsx
+   // Before
+   <h1>ルーレットアプリ</h1>
+   
+   // After
+   import { useTranslations } from 'next-intl';
+   const t = useTranslations('ui');
+   <h1>{t('title')}</h1>
+   ```
+
+2. **動的テキストの対応**
+   ```tsx
+   // Before
+   <span>「{validOptions[selectedIndex]}」が選ばれました！</span>
+   
+   // After
+   <span>{t('roulette.result', { option: validOptions[selectedIndex] })}</span>
+   ```
+
+3. **メタデータの国際化**
+   ```tsx
+   import { getTranslations } from 'next-intl/server';
+   
+   export async function generateMetadata({ params: { locale } }) {
+     const t = await getTranslations({ locale, namespace: 'metadata' });
+     
+     return {
+       title: t('title'),
+       description: t('description'),
+       openGraph: {
+         title: t('title'),
+         description: t('description'),
+         siteName: t('siteName'),
+       },
+     };
+   }
+   ```
+
+### Phase 4: 言語切り替え機能
+1. **自動言語検出**
+   ```typescript
+   // middleware.ts
+   import createMiddleware from 'next-intl/middleware';
+   
+   export default createMiddleware({
+     locales: ['ja', 'en', 'ko', 'pt'],
+     defaultLocale: 'ja',
+     localeDetection: true
+   });
+   ```
+
+2. **手動言語切り替えUI**
+   ```tsx
+   // LanguageSelector.tsx
+   import { useLocale, useTranslations } from 'next-intl';
+   import { useRouter, usePathname } from 'next/navigation';
+   
+   export default function LanguageSelector() {
+     const locale = useLocale();
+     const router = useRouter();
+     const pathname = usePathname();
+     
+     const languages = [
+       { code: 'ja', name: '日本語', flag: '🇯🇵' },
+       { code: 'en', name: 'English', flag: '🇺🇸' },
+       { code: 'ko', name: '한국어', flag: '🇰🇷' },
+       { code: 'pt', name: 'Português', flag: '🇧🇷' }
+     ];
+     
+     const handleLanguageChange = (newLocale: string) => {
+       const newPath = pathname.replace(`/${locale}`, `/${newLocale}`);
+       router.push(newPath);
+     };
+     
+     return (
+       <select value={locale} onChange={(e) => handleLanguageChange(e.target.value)}>
+         {languages.map((lang) => (
+           <option key={lang.code} value={lang.code}>
+             {lang.flag} {lang.name}
+           </option>
+         ))}
+       </select>
+     );
+   }
+   ```
+
+### Phase 5: テスト・最適化
+1. **テスト項目**
+   - 各言語での表示確認
+   - 言語切り替えの動作確認
+   - レスポンシブデザインの確認
+   - 既存機能の動作確認
+
+2. **最適化**
+   - 翻訳ファイルの遅延読み込み
+   - パフォーマンス最適化
+   - SEO最適化（hreflang等）
+
+## 5. 実装ガイドライン
+
+### ファイル命名規則
+- 翻訳ファイル: `{locale}.json`
+- ルート: `/[locale]/...`
+- ミドルウェア: `middleware.ts`
+
+### キー命名規則
+```json
+{
+  "metadata": { /* メタデータ関連 */ },
+  "ui": {
+    "title": "アプリタイトル",
+    "buttons": { /* ボタン関連 */ },
+    "roulette": { /* ルーレット関連 */ },
+    "batchInput": { /* 一括入力関連 */ },
+    "options": { /* 選択肢関連 */ },
+    "footer": { /* フッター関連 */ }
+  }
+}
+```
+
+### コンポーネントでの使用例
+```tsx
+import { useTranslations } from 'next-intl';
+
+export default function Component() {
+  const t = useTranslations('ui.buttons');
+  
+  return (
+    <button>{t('addOption')}</button>
+  );
+}
+```
+
+### 動的テキストの使用例
+```tsx
+// パラメータ付き翻訳
+<span>{t('roulette.result', { option: selectedOption })}</span>
+
+// 複数形対応
+<span>{t('options.count', { count: options.length })}</span>
+```
+
+## 6. 品質保証
+
+### 翻訳品質
+- ネイティブスピーカーによる翻訳レビュー
+- 文化的な適切性の確認
+- 専門用語の統一
+
+### 技術品質
+- TypeScript型安全性の確保
+- 翻訳キーの存在確認
+- パフォーマンステスト
+
+## 7. 今後の拡張性
+
+### 追加言語対応
+- 中国語（簡体字・繁体字）
+- スペイン語
+- フランス語
+- ドイツ語
+
+### 機能拡張
+- RTL（右から左）言語対応
+- 地域別の数値フォーマット
+- 動的コンテンツの国際化
+
+## 8. 注意事項
+
+- 画像内テキストの翻訳方法を検討
+- フォントの多言語対応確認
+- 文字数増加によるレイアウト調整
+- SEO対策（hreflang、sitemap等）
+- 既存の機能（重み付け、除外、一括入力）を壊さない
+- パフォーマンスへの影響を最小限に抑える
