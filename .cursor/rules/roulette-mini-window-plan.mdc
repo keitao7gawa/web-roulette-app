@@ -1,0 +1,164 @@
+# ルーレット・ミニウィンドウ表示仕様
+
+## 1. 目的・背景
+
+### 目的
+ルーレット全体が見えなくなるほどスクロールされた時に、ルーレット全体を写したミニウィンドウを自動表示することで、編集操作中もルーレットの状態を確認できるUXを実現する。
+
+### 現在の問題
+- 選択肢を入力中にルーレットが見えなくなる現象
+- ユーザーが選択肢を追加・編集している間、ルーレットの状態を確認できない
+- 特に長い選択肢リストの場合、ルーレットが画面外にスクロールしてしまう
+
+### 解決目標
+- スクロール検知による自動表示
+- ルーレット全体を写したミニウィンドウの表示
+- シンプルで軽量な実装
+
+## 2. 機能要件
+
+### 2.1 基本機能
+- **自動表示**: ルーレット全体が見えなくなった時に自動でミニウィンドウを表示
+- **自動非表示**: ルーレットが再び見えるようになった時に自動でミニウィンドウを非表示
+- **状態反映**: ミニウィンドウは、ルーレット本体の状態（回転中・停止中・選択結果など）を完全に反映
+- **固定位置**: 画面右下に固定配置
+
+### 2.2 技術仕様
+- **コンポーネント**: `RouletteMiniWindow.tsx`
+- **状態管理**: 既存のルーレット状態を共有
+- **スクロール検知**: Intersection Observer API を使用
+- **スタイリング**: CSS `position: fixed` を利用
+- **コンポーネント再利用**: ルーレット本体のCanvasやSVGをコンポーネントとして再利用し、縮小表示を実現
+
+## 3. UI設計
+
+### 3.1 ミニウィンドウの基本仕様
+- **位置**: 画面右下に固定配置
+- **サイズ**: 120px × 120px (モバイル), 150px × 150px (デスクトップ)
+- **表示条件**: ルーレット全体が見えなくなった時のみ自動表示
+- **制御**: 手動制御なし（自動表示/非表示のみ）
+
+### 3.2 コンポーネント構造
+```tsx
+// RouletteMiniWindow.tsx
+interface RouletteMiniWindowProps {
+  options: string[];
+  weights: number[];
+  colors: string[];
+  isSpinning: boolean;
+  currentResult?: string;
+  isVisible: boolean; // Intersection Observer で制御
+}
+```
+
+### 3.3 レイアウト設計
+```css
+/* 基本レイアウト */
+.mini-roulette {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 120px;
+  height: 120px;
+  z-index: 40;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* デスクトップ */
+@media (min-width: 768px) {
+  .mini-roulette {
+    width: 150px;
+    height: 150px;
+    bottom: 30px;
+    right: 30px;
+  }
+}
+```
+
+### 3.4 アニメーション仕様
+- **表示**: `opacity: 0` → `opacity: 1` + `transform: scale(0.8)` → `transform: scale(1)`
+- **非表示**: `opacity: 1` → `opacity: 0` + `transform: scale(1)` → `transform: scale(0.8)`
+- **持続時間**: 300ms
+
+## 4. 実装指針
+
+### 4.1 スクロール検知
+- **Intersection Observer API**: ルーレット要素の可視性を監視
+- **自動表示/非表示**: ルーレット全体が見えなくなった時に自動表示、見えるようになった時に自動非表示
+- **コンポーネント再利用**: ルーレット本体のCanvasやSVGをコンポーネントとして再利用し、縮小表示を実現
+
+### 4.2 レスポンシブ対応
+- **モバイル**: 120px × 120px
+- **デスクトップ**: 150px × 150px
+
+## 5. 実装フェーズ
+
+### Phase 1: 基本コンポーネント作成
+1. **RouletteMiniWindow.tsx** の作成
+   - 基本的なミニルーレット表示
+   - 固定位置での表示
+   - 基本的なスタイリング
+
+2. **Intersection Observer の実装**
+   - ルーレット要素の可視性監視
+   - 自動表示/非表示の制御
+
+### Phase 2: 統合・テスト
+1. **OptionsEditor への統合**
+   - 状態の同期確認
+   - 動作テスト
+
+2. **アニメーション実装**
+   - CSS transitions の実装
+   - スムーズなフェードイン/アウト
+
+## 6. 技術的考慮事項
+
+### 6.1 パフォーマンス
+- **レンダリング最適化**: React.memo の使用
+- **Intersection Observer**: 効率的なスクロール検知
+- **メモリ使用量**: 不要な再レンダリングの防止
+
+### 6.2 ブラウザ互換性
+- **Intersection Observer API**: モダンブラウザ対応
+- **CSS transitions**: フォールバック実装
+
+## 7. 実装ファイル構成
+
+```
+app/components/
+├── RouletteMiniWindow.tsx          # メインコンポーネント
+└── hooks/
+    └── useIntersectionObserver.ts  # Intersection Observer フック
+
+app/types/
+└── roulette-mini-window.ts         # 型定義
+```
+
+## 8. 実装スケジュール
+
+### Week 1: 基本実装
+- Phase 1 の完了（基本コンポーネント + Intersection Observer）
+
+### Week 2: 統合・テスト
+- Phase 2 の完了（統合 + アニメーション）
+
+## 9. 成功指標
+
+### 9.1 技術指標
+- **パフォーマンス**: 60fps でのアニメーション
+- **メモリ使用量**: 既存機能への影響 < 5%
+- **Intersection Observer**: 効率的なスクロール検知
+
+### 9.2 ユーザビリティ指標
+- **自動表示**: ルーレットが見えなくなった時に確実に表示
+- **自動非表示**: ルーレットが見えるようになった時に確実に非表示
+- **レスポンシブ**: モバイル・デスクトップ両方で適切に動作
+
+---
+
+この実装計画に基づいて、段階的にルーレット・ミニウィンドウを実装していきます。各フェーズでの進捗とフィードバックを基に、必要に応じて計画を調整していきます。
