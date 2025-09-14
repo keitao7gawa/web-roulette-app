@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "title": "웹 룰렛 | Web Roulette EX",
+    "description": "무료로 사용할 수 있는! 가중치 조정 가능한 룰렛 앱입니다.",
+    "siteName": "웹 룰렛 | Web Roulette EX"
+  },
+  "ui": {
+    "title": "룰렛 앱",
+    "instructions": {
+      "addOptions": "📋 목록에 선택지 추가",
+      "adjustProbability": "📊 확률 슬라이더로 조정",
+      "spin": "🎯 룰렛 중앙 버튼을 눌러 스핀!"
+    },
+    "buttons": {
+      "addOption": "선택지 추가",
+      "shuffle": "섞기",
+      "equalize": "균등화",
+      "batchInput": "일괄 입력",
+      "closeBatchInput": "일괄 입력 닫기",
+      "cancel": "취소",
+      "apply": "적용",
+      "revive": "복구",
+      "reviveAll": "전체 복구"
+    },
+    "roulette": {
+      "spinning": "추첨 중...",
+      "ready": "중앙 버튼을 눌러 추첨 시작",
+      "noOptions": "선택지를 입력해주세요",
+      "result": "「{option}」이 선택되었습니다!",
+      "exclude": "이 선택지 제외"
+    },
+    "batchInput": {
+      "title": "일괄 입력",
+      "textLabel": "텍스트 (줄바꿈/Markdown 목록 지원)",
+      "methodLabel": "적용 방법",
+      "append": "추가",
+      "appendDesc": "기존 선택지에 추가",
+      "replace": "교체",
+      "replaceDesc": "기존 선택지를 교체",
+      "placeholder": "- 사과\n- 바나나\n- 오렌지",
+      "error": "유효한 줄을 찾을 수 없습니다"
+    },
+    "options": {
+      "title": "선택지 목록",
+      "placeholder": "선택지 {number}",
+      "percentage": "{value}%",
+      "excluded": "제외됨"
+    },
+    "footer": {
+      "privacy": "개인정보 보호",
+      "privacyDesc": "모든 처리는 브라우저 내에서 완료되며, 데이터가 외부로 전송되지 않습니다.",
+      "github": "GitHub에서 보기",
+      "twitter": "keitao7gawa"
+    }
+  }
+}

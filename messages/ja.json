@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "title": "Webルーレット | Web Roulette EX",
+    "description": "無料で使える！重み付けできるルーレットアプリです．",
+    "siteName": "Webルーレット | Web Roulette EX"
+  },
+  "ui": {
+    "title": "ルーレットアプリ",
+    "instructions": {
+      "addOptions": "📋 リストに選択肢を追加",
+      "adjustProbability": "📊 確率スライダーで調整",
+      "spin": "🎯 ルーレット中央のボタンでスピン！"
+    },
+    "buttons": {
+      "addOption": "選択肢を追加",
+      "shuffle": "シャッフル",
+      "equalize": "均等化",
+      "batchInput": "一括入力",
+      "closeBatchInput": "一括入力を閉じる",
+      "cancel": "キャンセル",
+      "apply": "反映",
+      "revive": "復活",
+      "reviveAll": "一括復活"
+    },
+    "roulette": {
+      "spinning": "抽選中...",
+      "ready": "中央のボタンを押して抽選を開始",
+      "noOptions": "選択肢を入力してください",
+      "result": "「{option}」が選ばれました！",
+      "exclude": "この選択肢を除外"
+    },
+    "batchInput": {
+      "title": "一括入力",
+      "textLabel": "テキスト（改行/Markdownリスト対応）",
+      "methodLabel": "反映方法",
+      "append": "追加",
+      "appendDesc": "既存の選択肢に追加",
+      "replace": "置換",
+      "replaceDesc": "既存の選択肢を置換",
+      "placeholder": "- りんご\n- バナナ\n- みかん",
+      "error": "有効な行が見つかりません"
+    },
+    "options": {
+      "title": "選択肢リスト",
+      "placeholder": "選択肢 {number}",
+      "percentage": "{value}%",
+      "excluded": "除外"
+    },
+    "footer": {
+      "privacy": "プライバシー保護",
+      "privacyDesc": "すべての処理はブラウザ内で完結し，データが外部に送信されることはありません．",
+      "github": "View on GitHub",
+      "twitter": "keitao7gawa"
+    }
+  }
+}

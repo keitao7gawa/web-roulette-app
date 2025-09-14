@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "title": "Roleta Web | Web Roulette EX",
+    "description": "Aplicativo de roleta gratuito com ajuste de peso!",
+    "siteName": "Roleta Web | Web Roulette EX"
+  },
+  "ui": {
+    "title": "Aplicativo de Roleta",
+    "instructions": {
+      "addOptions": "📋 Adicionar opções à lista",
+      "adjustProbability": "📊 Ajustar com controle deslizante de probabilidade",
+      "spin": "🎯 Pressione o botão central para girar!"
+    },
+    "buttons": {
+      "addOption": "Adicionar Opção",
+      "shuffle": "Embaralhar",
+      "equalize": "Equalizar",
+      "batchInput": "Entrada em Lote",
+      "closeBatchInput": "Fechar Entrada em Lote",
+      "cancel": "Cancelar",
+      "apply": "Aplicar",
+      "revive": "Reviver",
+      "reviveAll": "Reviver Todos"
+    },
+    "roulette": {
+      "spinning": "Sorteando...",
+      "ready": "Pressione o botão central para iniciar o sorteio",
+      "noOptions": "Por favor, insira opções",
+      "result": "「{option}」foi selecionado!",
+      "exclude": "Excluir esta opção"
+    },
+    "batchInput": {
+      "title": "Entrada em Lote",
+      "textLabel": "Texto (suporta quebras de linha/listas Markdown)",
+      "methodLabel": "Método de Aplicação",
+      "append": "Anexar",
+      "appendDesc": "Adicionar às opções existentes",
+      "replace": "Substituir",
+      "replaceDesc": "Substituir opções existentes",
+      "placeholder": "- Maçã\n- Banana\n- Laranja",
+      "error": "Nenhuma linha válida encontrada"
+    },
+    "options": {
+      "title": "Lista de Opções",
+      "placeholder": "Opção {number}",
+      "percentage": "{value}%",
+      "excluded": "Excluído"
+    },
+    "footer": {
+      "privacy": "Proteção de Privacidade",
+      "privacyDesc": "Todo o processamento é concluído no navegador, e os dados nunca são enviados externamente.",
+      "github": "Ver no GitHub",
+      "twitter": "keitao7gawa"
+    }
+  }
+}

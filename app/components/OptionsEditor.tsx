@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { PlusIcon, TrashIcon, ArrowPathIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
+import { useTranslations } from 'next-intl';
 import type { Option } from '../types/option';
 import { getColor } from '../constants/colors';
 import { Confetti } from './Confetti';
@@ -18,6 +19,7 @@ import { loadExcluded, saveExcluded } from '../lib/storage';
 function genId() { return Math.random().toString(36).slice(2, 10); }
 
 export default function OptionsEditor() {
+  const t = useTranslations('ui');
   const [options, setOptions] = useState<Option[]>([{ id: genId(), text: '', weight: 100 }]);
   const [excludedTexts, setExcludedTexts] = useState<string[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -406,7 +408,7 @@ export default function OptionsEditor() {
     setBatchError(null);
     const parsed = parseBatchInput(batchText);
     if (parsed.length === 0) {
-      setBatchError('有効な行が見つかりません');
+      setBatchError(t('batchInput.error'));
       return;
     }
 
@@ -429,12 +431,12 @@ export default function OptionsEditor() {
   return (
     <main className="min-h-screen p-4 sm:p-8 bg-gradient-to-br from-light to-white dark:from-gray-950 dark:to-gray-900">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl sm:text-5xl font-bold text-center mb-4 text-accent dark:text-accent tracking-tight">ルーレットアプリ</h1>
+        <h1 className="text-4xl sm:text-5xl font-bold text-center mb-4 text-accent dark:text-accent tracking-tight">{t('title')}</h1>
 
         <div className="text-center mb-8 text-gray-700 dark:text-gray-200 text-base sm:text-lg md:text-xl flex flex-col items-center font-medium">
-          <p className="mb-2">📋 リストに選択肢を追加</p>
-          <p className="mb-2">📊 確率スライダーで調整</p>
-          <p className="mb-2">🎯 ルーレット中央のボタンでスピン！</p>
+          <p className="mb-2">{t('instructions.addOptions')}</p>
+          <p className="mb-2">{t('instructions.adjustProbability')}</p>
+          <p className="mb-2">{t('instructions.spin')}</p>
         </div>
 
         <div className="gradient-border mb-10 relative" ref={rouletteContainerRef}>
@@ -461,7 +463,7 @@ export default function OptionsEditor() {
         </div>
 
         <div className="space-y-2 mb-8 mt-10">
-          <h2 className="text-xl sm:text-2xl font-bold text-center mb-2 text-accent">選択肢リスト</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-center mb-2 text-accent">{t('options.title')}</h2>
         {/* Batch input panel */}
         <div className="mb-4">
           <button
@@ -474,7 +476,7 @@ export default function OptionsEditor() {
               transition border border-white/10 dark:border-white/5`}
           >
             <ClipboardDocumentListIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span>{isBatchOpen ? '一括入力を閉じる' : '一括入力'}</span>
+            <span>{isBatchOpen ? t('buttons.closeBatchInput') : t('buttons.batchInput')}</span>
           </button>
           {isBatchOpen && (
             <div className="mt-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white/50 dark:bg-gray-900/40 backdrop-blur-sm">
@@ -484,19 +486,19 @@ export default function OptionsEditor() {
                   {/* テキストエリアセクション */}
                   <div className="lg:col-span-2 space-y-2 flex flex-col">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      テキスト（改行/Markdownリスト対応）
+                      {t('batchInput.textLabel')}
                     </label>
                     <textarea
                       value={batchText}
                       onChange={(e) => setBatchText(e.target.value)}
                       className="w-full h-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                      placeholder={`- りんご\n- バナナ\n- みかん`}
+                      placeholder={t('batchInput.placeholder')}
                     />
                   </div>
 
                   {/* 反映方法セクション */}
                   <div className="space-y-3">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">反映方法</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('batchInput.methodLabel')}</span>
                     <div
                       role="group"
                       aria-label="一括入力の反映方法"
@@ -512,9 +514,9 @@ export default function OptionsEditor() {
                             : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
                         }`}
                       >
-                        追加
+                        {t('batchInput.append')}
                         <div className="text-xs mt-1 opacity-80">
-                          既存の選択肢に追加
+                          {t('batchInput.appendDesc')}
                         </div>
                       </button>
                       <button
@@ -527,9 +529,9 @@ export default function OptionsEditor() {
                             : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
                         }`}
                       >
-                        置換
+                        {t('batchInput.replace')}
                         <div className="text-xs mt-1 opacity-80">
-                          既存の選択肢を置換
+                          {t('batchInput.replaceDesc')}
                         </div>
                       </button>
                     </div>
@@ -550,14 +552,14 @@ export default function OptionsEditor() {
                     onClick={() => setIsBatchOpen(false)}
                     className="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
-                    キャンセル
+                    {t('buttons.cancel')}
                   </button>
                   <button
                     type="button"
                     onClick={handleApplyBatch}
                     className="px-4 py-2 text-sm font-medium rounded-md bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 shadow-sm transition-colors"
                   >
-                    反映
+                    {t('buttons.apply')}
                   </button>
                 </div>
               </div>
@@ -588,7 +590,7 @@ export default function OptionsEditor() {
                           onKeyDown={(e) => handleKeyDown(e, index)}
                           onFocus={() => setFocusedIndex(index)}
                           onBlur={() => setFocusedIndex(null)}
-                          placeholder={`選択肢 ${index + 1}`}
+                          placeholder={t('options.placeholder', { number: index + 1 })}
                           style={{ borderColor: isValid && !isExcluded && displayColor ? displayColor : '#e5e7eb', borderWidth: isFocused ? '4px' : '3px' }}
                           className={`flex-1 rounded-md focus:outline-none transition-all ${isSpinning ? 'notransition bg-gray-100 cursor-not-allowed' : ''} ${isFocused ? 'text-base sm:text-lg font-medium shadow-sm py-2 px-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500' : 'text-sm py-1.5 px-2.5 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400'}`}
                           disabled={isSpinning}
@@ -601,7 +603,7 @@ export default function OptionsEditor() {
                             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                             aria-label="この選択肢の除外を解除"
                           >
-                            復活
+                            {t('buttons.revive')}
                           </button>
                         )}
                       </div>
@@ -665,7 +667,7 @@ export default function OptionsEditor() {
                             style={{ color: isValid && !isExcluded ? displayColor : undefined, fontSize: isFocused ? '1rem' : '0.875rem' }}
                             aria-label="割合を編集"
                           >
-                            {displayPercentage.toFixed(1)}%
+                            {t('options.percentage', { value: displayPercentage.toFixed(1) })}
                           </button>
                         )}
                       </div>
@@ -702,7 +704,7 @@ export default function OptionsEditor() {
               aria-disabled={isSpinning || hasEmptyOption(options)}
             >
               <PlusIcon className="w-5 h-5" />
-              <span>選択肢を追加</span>
+              <span>{t('buttons.addOption')}</span>
             </button>
 
             <div className="flex gap-2">
@@ -718,7 +720,7 @@ export default function OptionsEditor() {
                   aria-disabled={isSpinning}
                   aria-label="除外された選択肢をすべて復活"
                 >
-                  一括復活
+                  {t('buttons.reviveAll')}
                 </button>
               )}
               <button
@@ -728,7 +730,7 @@ export default function OptionsEditor() {
                 aria-disabled={isSpinning || validOptionsCount <= 1}
               >
                 <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span>シャッフル</span>
+                <span>{t('buttons.shuffle')}</span>
               </button>
 
               <button
@@ -740,7 +742,7 @@ export default function OptionsEditor() {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 sm:w-5 sm:h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                 </svg>
-                <span>均等化</span>
+                <span>{t('buttons.equalize')}</span>
               </button>
             </div>
           </div>
@@ -751,11 +753,10 @@ export default function OptionsEditor() {
         <p className="text-sm flex flex-col items-center justify-center gap-1">
           <span className="flex items-center gap-1">
             <span className="text-base">🔒</span>
-            <span className="font-medium"><strong>プライバシー保護</strong></span>
+            <span className="font-medium"><strong>{t('footer.privacy')}</strong></span>
             <span className="text-base">🔒</span>
           </span>
-          <span className="mt-1">すべての処理はブラウザ内で完結し，</span>
-          <span>データが外部に送信されることはありません．<span className="text-yellow-500"></span></span>
+          <span className="mt-1">{t('footer.privacyDesc')}</span>
         </p>
         <div className="mt-3 flex items-center justify-center">
           <a
@@ -767,7 +768,7 @@ export default function OptionsEditor() {
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" className="w-4 h-4">
               <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
             </svg>
-            <span>View on GitHub</span>
+            <span>{t('footer.github')}</span>
           </a>
         </div>
         <div className="mt-3 flex items-center justify-center">
@@ -778,7 +779,7 @@ export default function OptionsEditor() {
             className="inline-flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
           >
             <Image src="/x-logo.svg" alt="X Logo" width={16} height={16} className="w-4 h-4" />
-            <span>keitao7gawa</span>
+            <span>{t('footer.twitter')}</span>
           </a>
         </div>
       </footer>

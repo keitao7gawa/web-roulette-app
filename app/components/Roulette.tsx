@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { PlayIcon } from '@heroicons/react/24/solid';
 import { XCircleIcon } from '@heroicons/react/24/outline';
+import { useTranslations } from 'next-intl';
 import { useRoulette } from '../hooks/useRoulette';
 
 // 型定義
@@ -23,6 +24,7 @@ const MIN_DURATION = 4;
 const MAX_DURATION = 6;
 
 export default function Roulette({ options, weights, onSegmentColorChange, colors, onResultDetermined, isSpinning, onSpin, onExclude, onExcludeIndex }: RouletteProps) {
+  const t = useTranslations('ui.roulette');
   const {
     validOptions,
     rotation,
@@ -45,14 +47,14 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
 
   // スピンボタンのクリックハンドラ
   const handleSpinClick = () => {
-    const isPlaceholderOnly = validOptions.length === 1 && validOptions[0] === 'オプションを入力してください';
+    const isPlaceholderOnly = validOptions.length === 1 && validOptions[0] === t('noOptions');
     if (isPlaceholderOnly || validOptions.length < 1 || isSpinning) return;
     startSpinning();
     onSpin();
   };
 
   // 入力が必要なメッセージを表示するかどうか判断（入力フェーズのみ）
-  const isPlaceholderOnly = validOptions.length === 1 && validOptions[0] === 'オプションを入力してください';
+  const isPlaceholderOnly = validOptions.length === 1 && validOptions[0] === t('noOptions');
   const showInputMessage = isPlaceholderOnly;
   const hasValidSelection = selectedIndex !== null && selectedIndex >= 0 && selectedIndex < validOptions.length;
   const shouldShowTopMessage =
@@ -86,7 +88,7 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
               ease: "easeInOut"
             }}
           >
-            抽選中...
+            {t('spinning')}
           </motion.div>
         ) : showInputMessage ? (
           <motion.div 
@@ -95,7 +97,7 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
             transition={{ duration: 0.5, type: "spring" }}
             className="p-3 px-5 rounded-lg bg-primary/10 text-primary dark:bg-primary/20"
           >
-            選択肢を入力してください
+            {t('noOptions')}
           </motion.div>
         ) : appPhase === 'ready' ? (
           <motion.div 
@@ -104,7 +106,7 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
             transition={{ duration: 0.4 }}
             className="p-3 px-5 rounded-lg bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200"
           >
-            中央のボタンを押して抽選を開始
+            {t('ready')}
           </motion.div>
         ) : appPhase === 'result' && showResult && selectedIndex !== null && selectedIndex >= 0 && selectedIndex < validOptions.length ? (
           <motion.div 
@@ -113,7 +115,7 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
             transition={{ duration: 0.5, type: "spring" }}
             className="p-3 px-5 rounded-lg bg-accent/10 text-accent dark:bg-accent/20 inline-flex items-center gap-3 flex-wrap justify-center"
           >
-            <span>「{validOptions[selectedIndex]}」が選ばれました！</span>
+            <span>{t('result', { option: validOptions[selectedIndex] })}</span>
             {(onExcludeIndex || onExclude) && (
               <button
                 type="button"
@@ -125,7 +127,7 @@ export default function Roulette({ options, weights, onSegmentColorChange, color
                 aria-label="この選択肢を抽選対象から除外"
               >
                 <XCircleIcon className="w-4 h-4" />
-                この選択肢を除外
+                {t('exclude')}
               </button>
             )}
           </motion.div>

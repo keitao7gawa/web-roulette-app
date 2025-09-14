@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "title": "Web Roulette | Web Roulette EX",
+    "description": "Free roulette app with weight adjustment!",
+    "siteName": "Web Roulette | Web Roulette EX"
+  },
+  "ui": {
+    "title": "Roulette App",
+    "instructions": {
+      "addOptions": "📋 Add options to the list",
+      "adjustProbability": "📊 Adjust with probability slider",
+      "spin": "🎯 Press the center button to spin!"
+    },
+    "buttons": {
+      "addOption": "Add Option",
+      "shuffle": "Shuffle",
+      "equalize": "Equalize",
+      "batchInput": "Batch Input",
+      "closeBatchInput": "Close Batch Input",
+      "cancel": "Cancel",
+      "apply": "Apply",
+      "revive": "Revive",
+      "reviveAll": "Revive All"
+    },
+    "roulette": {
+      "spinning": "Drawing...",
+      "ready": "Press the center button to start drawing",
+      "noOptions": "Please enter options",
+      "result": "「{option}」was selected!",
+      "exclude": "Exclude this option"
+    },
+    "batchInput": {
+      "title": "Batch Input",
+      "textLabel": "Text (supports line breaks/Markdown lists)",
+      "methodLabel": "Apply Method",
+      "append": "Append",
+      "appendDesc": "Add to existing options",
+      "replace": "Replace",
+      "replaceDesc": "Replace existing options",
+      "placeholder": "- Apple\n- Banana\n- Orange",
+      "error": "No valid lines found"
+    },
+    "options": {
+      "title": "Options List",
+      "placeholder": "Option {number}",
+      "percentage": "{value}%",
+      "excluded": "Excluded"
+    },
+    "footer": {
+      "privacy": "Privacy Protection",
+      "privacyDesc": "All processing is completed in the browser, and data is never sent externally.",
+      "github": "View on GitHub",
+      "twitter": "keitao7gawa"
+    }
+  }
+}
