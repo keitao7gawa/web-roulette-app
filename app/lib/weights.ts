@@ -126,110 +126,26 @@ export interface ProcessedDisplay {
 
 export function processForDisplay(optionsList: Option[], colorResolver: (_index: number) => string, noOptionsText: string = "オプションを入力してください"): ProcessedDisplay {
   const validOptions = optionsList.filter(opt => opt.text.trim() !== "");
+  
   if (validOptions.length === 0) {
     return {
       processedOptions: [noOptionsText],
       processedWeights: [100],
       processedColors: [colorResolver(0)],
-      processedSourceIndices: [],
+      processedSourceIndices: [0]
     };
   }
 
-  const processedOptions: string[] = [];
-  const processedWeights: number[] = [];
-  const optionIndices: number[] = [];
+  // シンプルな処理：分割ロジックを削除
+  const processedOptions = validOptions.map(opt => opt.text);
+  const processedWeights = validOptions.map(opt => opt.weight);
+  const processedColors = validOptions.map((_, index) => colorResolver(index));
+  const processedSourceIndices = validOptions.map((_, index) => index);
 
-  const splitIndices: number[] = [];
-
-  const totalWeight = validOptions.reduce((sum, opt) => sum + opt.weight, 0);
-  const averageWeight = totalWeight / validOptions.length;
-
-  const sortedWeights = [...validOptions]
-    .sort((a, b) => a.weight - b.weight)
-    .map(opt => opt.weight);
-  const medianWeight =
-    sortedWeights.length % 2 === 0
-      ? (sortedWeights[sortedWeights.length / 2 - 1] + sortedWeights[sortedWeights.length / 2]) / 2
-      : sortedWeights[Math.floor(sortedWeights.length / 2)];
-
-  const baseWeight = Math.min(averageWeight, medianWeight);
-  const SPLIT_RATIO = 1.5;
-  const splitThreshold = baseWeight * SPLIT_RATIO;
-
-  validOptions.forEach((option, index) => {
-    if (option.weight >= splitThreshold && option.weight >= 20) {
-      splitIndices.push(index);
-    }
-  });
-
-  validOptions.forEach((option, index) => {
-    if (splitIndices.includes(index)) {
-      const halfWeight = Math.floor((option.weight / 2) * 10) / 10;
-      const remainder = option.weight - halfWeight * 2;
-
-      processedOptions.push(option.text);
-      processedWeights.push(halfWeight + remainder);
-      optionIndices.push(index);
-    } else {
-      processedOptions.push(option.text);
-      processedWeights.push(option.weight);
-      optionIndices.push(index);
-    }
-  });
-
-  splitIndices.forEach(originalIndex => {
-    const option = validOptions[originalIndex];
-    const halfWeight = Math.floor((option.weight / 2) * 10) / 10;
-
-    const firstSegmentIndex = processedOptions.findIndex((opt, idx) => opt === option.text && optionIndices[idx] === originalIndex);
-    if (firstSegmentIndex === -1) return;
-
-    const totalCount = processedOptions.length;
-
-    let bestPosition = -1;
-    let maxMinDistance = -1;
-
-    for (let pos = 0; pos < totalCount; pos++) {
-      const distanceFromFirst = Math.min(
-        Math.abs(pos - firstSegmentIndex),
-        totalCount - Math.abs(pos - firstSegmentIndex)
-      );
-
-      let minDistanceFromOthers = totalCount;
-      for (let i = 0; i < processedOptions.length; i++) {
-        if (optionIndices[i] === originalIndex || !splitIndices.includes(optionIndices[i])) continue;
-        const distance = Math.min(Math.abs(pos - i), totalCount - Math.abs(pos - i));
-        minDistanceFromOthers = Math.min(minDistanceFromOthers, distance);
-      }
-
-      const minDistance = Math.min(distanceFromFirst, minDistanceFromOthers);
-      if (minDistance > maxMinDistance) {
-        maxMinDistance = minDistance;
-        bestPosition = pos;
-      }
-    }
-
-    if (bestPosition === -1) {
-      bestPosition = (firstSegmentIndex + Math.floor(totalCount / 2)) % totalCount;
-    }
-
-    const segmentDistance = Math.min(
-      Math.abs(bestPosition - firstSegmentIndex),
-      totalCount - Math.abs(bestPosition - firstSegmentIndex)
-    );
-
-    if (segmentDistance <= 1) {
-      processedOptions[firstSegmentIndex] = option.text;
-      processedWeights.push(option.weight);
-      return;
-    }
-
-    processedOptions.splice(bestPosition, 0, option.text);
-    processedWeights.splice(bestPosition, 0, halfWeight);
-    optionIndices.splice(bestPosition, 0, originalIndex);
-  });
-
-  const processedColors = optionIndices.map(index => colorResolver(index));
-
-  return { processedOptions, processedWeights, processedColors, processedSourceIndices: optionIndices };
+  return {
+    processedOptions,
+    processedWeights,
+    processedColors,
+    processedSourceIndices
+  };
 }

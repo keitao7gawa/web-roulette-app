@@ -46,19 +46,42 @@ export function useRoulette({
   
   // 有効な選択肢の重みを取得
   const validWeights = useMemo(() => {
-    if (!weights) return validOptions.map(() => 1);
-    return options
-      .map((option, index) => ({ option, weight: weights[index] || 1 }))
-      .filter(item => item.option && item.option.trim() !== '')
-      .map(item => item.weight);
-  }, [validOptions, weights, options]);
+    if (!weights || weights.length === 0) {
+      return validOptions.map(() => 1);
+    }
+    
+    // シンプルな重み計算：optionsとweightsの配列長を一致させる
+    const result: number[] = [];
+    
+    for (let i = 0; i < validOptions.length; i++) {
+      if (i < weights.length) {
+        result.push(weights[i]);
+      } else {
+        result.push(1); // デフォルト値
+      }
+    }
+    
+    return result;
+  }, [validOptions, weights]);
   
   // 重みの合計を計算
   const totalWeight = useMemo(() => validWeights.reduce((sum, weight) => sum + weight, 0), [validWeights]);
   
   // 各セグメントの角度を計算
   const segmentAngles = useMemo(() => {
-    if (totalWeight === 0) return validOptions.map(() => 360 / validOptions.length);
+    if (totalWeight === 0) {
+      console.warn('Total weight is 0, using equal distribution');
+      return validOptions.map(() => 360 / validOptions.length);
+    }
+    
+    if (validWeights.length !== validOptions.length) {
+      console.error('Mismatch between options and weights length:', {
+        optionsLength: validOptions.length,
+        weightsLength: validWeights.length
+      });
+      return validOptions.map(() => 360 / validOptions.length);
+    }
+    
     return validWeights.map(weight => (weight / totalWeight) * 360);
   }, [validWeights, totalWeight, validOptions]);
 
@@ -233,6 +256,17 @@ export function useRoulette({
     }
     return text;
   };
+
+  // デバッグ用のログ（本番環境では削除）
+  useEffect(() => {
+    console.log('Roulette Debug Info:', {
+      validOptions,
+      validWeights,
+      totalWeight,
+      segmentAngles,
+      colors
+    });
+  }, [validOptions, validWeights, totalWeight, segmentAngles, colors]);
 
   return {
     validOptions,
